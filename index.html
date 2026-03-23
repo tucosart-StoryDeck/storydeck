@@ -346,7 +346,17 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 <div id="ipad-dim" onclick="ipadClose()"></div>
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="sidebar-logo"><h1>StoryDeck</h1><span style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;color:var(--muted);letter-spacing:0.04em;margin-top:3px;display:block;">©DCauterucci 2026</span></div>
+  <div class="sidebar-logo">
+    <h1>StoryDeck</h1>
+    <span style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;color:var(--muted);letter-spacing:0.04em;margin-top:3px;display:block;">©DCauterucci 2026</span>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+      <button class="btn" style="width:100%;padding:9px;font-size:0.75rem;" onclick="openNewProjectModal()">+ New Project</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn" style="flex:1;padding:9px;font-size:0.75rem;" onclick="saveManual()">💾 Save</button>
+        <button class="btn" style="flex:1;padding:9px;font-size:0.75rem;" onclick="document.getElementById('load-file-input').click()">📂 Load</button>
+      </div>
+    </div>
+  </div>
   <div class="sidebar-section-label">Projects</div>
   <div class="project-list" id="project-list"></div>
   <div class="sidebar-footer">
