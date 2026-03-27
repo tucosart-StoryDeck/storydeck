@@ -1,0 +1,3596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Story Notecard Board</title>
+<style>
+/* System font fallbacks - no external dependency */
+:root {
+  --card-font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --card-font-size: 0.74rem;
+  --bg:#1a1a1f; --surface:#22222a; --surface2:#2a2a34; --border:#333340;
+  --text:#e8e8f0; --muted:#888899; --accent:#f0c060; --sidebar-w:240px;
+  --col-teal:#00b4b4; --col-pink:#e040a0; --col-green:#40c060;
+  --col-orange:#f08030; --col-purple:#9060e0; --col-red:#e04040;
+  --col-yellow:#d0c040; --col-blue:#4080e0; --col-salmon:#d08070; --col-white:#ffffff; --col-gray:#c8c8d8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;min-height:100vh;display:flex;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;}
+.sidebar-logo{padding:18px 18px 12px;border-bottom:1px solid var(--border);}
+.sidebar-logo h1{font-family:Georgia, 'Times New Roman', serif;font-size:1.1rem;color:var(--accent);}
+.sidebar-logo span{font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.sidebar-section-label{font-family:'Courier New', Courier, monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);padding:12px 18px 6px;}
+.project-list{flex:1;overflow-y:auto;padding:4px 10px;}
+.project-list::-webkit-scrollbar{width:4px;} .project-list::-webkit-scrollbar-thumb{background:var(--border);}
+.project-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:3px;cursor:pointer;transition:background 0.12s;}
+.project-item:hover{background:var(--surface2);} .project-item.active{background:rgba(240,192,96,0.12);}
+.project-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.project-name{font-size:0.82rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.project-item.active .project-name{color:var(--accent);}
+.project-count{font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);background:var(--bg);padding:1px 5px;border-radius:10px;flex-shrink:0;}
+.project-menu-btn{opacity:0;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1;padding:0 2px;transition:opacity 0.1s,color 0.1s;flex-shrink:0;}
+.project-item:hover .project-menu-btn{opacity:1;} .project-menu-btn:hover{color:var(--accent);}
+.sidebar-footer{padding:10px 10px;border-top:1px solid var(--border);}
+.btn-new-project{width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.7rem;padding:7px;cursor:pointer;letter-spacing:0.05em;transition:border-color 0.15s,color 0.15s;text-align:center;}
+.btn-new-project:hover{border-color:var(--accent);color:var(--accent);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.header-title-wrap{flex:1;display:flex;align-items:center;gap:8px;min-width:0;}
+.header-title-col{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.header-title-row{display:flex;align-items:center;gap:8px;}
+#book-title-display{font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;}
+#book-title-input{background:transparent;border:none;border-bottom:1px solid var(--accent);color:var(--text);font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;outline:none;width:240px;padding:2px 4px;display:none;}
+.edit-title-hint{font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);cursor:pointer;transition:color 0.15s;flex-shrink:0;}
+.edit-title-hint:hover{color:var(--accent);}
+#proj-desc-display{font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;cursor:pointer;}
+.btn{background:var(--accent);color:#111;border:none;padding:6px 14px;font-family:'Courier New', Courier, monospace;font-size:0.7rem;font-weight:500;cursor:pointer;letter-spacing:0.05em;transition:opacity 0.15s;white-space:nowrap;flex-shrink:0;}
+.btn:hover{opacity:0.85;}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent);}
+
+/* VIEW TABS */
+.view-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;padding:0 20px;}
+.view-tab{font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:8px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:color 0.12s,border-color 0.12s;letter-spacing:0.05em;text-transform:uppercase;}
+.view-tab:hover{color:var(--text);}
+.view-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;flex-wrap:wrap;flex-shrink:0;}
+.toolbar-label{font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;}
+.color-dot{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform 0.1s,border-color 0.1s;flex-shrink:0;}
+.color-dot:hover,.color-dot.active{transform:scale(1.3);border-color:white;}
+.toolbar-sep{width:1px;height:20px;background:var(--border);margin:0 4px;}
+.flag-filter-btn{display:flex;align-items:center;gap:4px;padding:3px 9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.6rem;cursor:pointer;border-radius:2px;transition:all 0.12s;letter-spacing:0.03em;white-space:nowrap;}
+.flag-filter-btn:hover{border-color:var(--muted);color:var(--text);}
+.flag-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,192,96,0.08);}
+.flag-filter-btn .pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* SEARCH BAR */
+.search-bar{display:flex;align-items:center;gap:8px;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.search-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.85rem;padding:7px 12px;outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--accent);}
+.search-count{font-family:'Courier New', Courier, monospace;font-size:0.65rem;color:var(--muted);white-space:nowrap;}
+.search-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0 4px;transition:color 0.1s;}
+.search-clear:hover{color:var(--accent);}
+
+/* BOARD */
+.board-wrap{flex:1;overflow-y:auto;}
+.board-wrap::-webkit-scrollbar{width:6px;} .board-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.board{padding:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:start;}
+
+/* CARD */
+.card{border-radius:2px;padding:11px 11px 9px;position:relative;cursor:grab;user-select:none;height:var(--card-height,190px);min-height:var(--card-height,190px);max-height:var(--card-height,190px);transition:transform 0.15s,box-shadow 0.15s;display:flex;flex-direction:column;gap:0;overflow:hidden;flex:0 0 170px;width:170px;}
+.card:hover{transform:translateY(-2px) rotate(0.3deg);box-shadow:0 8px 24px rgba(0,0,0,0.5);z-index:2;}
+.card.dragging{opacity:0.35;transform:scale(0.95);}
+.card.drag-over{outline:2px dashed rgba(255,255,255,0.6);outline-offset:2px;}
+/* DROP GAP PLACEHOLDER */
+.drop-gap{width:6px;min-width:6px;border-radius:3px;background:linear-gradient(to bottom,transparent,white,transparent);box-shadow:0 0 10px 2px rgba(255,255,255,0.7);align-self:stretch;flex-shrink:0;pointer-events:none;animation:dropglow 0.8s ease-in-out infinite alternate;}
+@keyframes dropglow{from{opacity:0.6;box-shadow:0 0 8px 2px rgba(255,255,255,0.5);}to{opacity:1;box-shadow:0 0 16px 4px rgba(255,255,255,0.9);}}
+/* STACK DROP INDICATORS - keep gold glow for stacking */
+.card.drop-stack{outline:3px solid var(--accent) !important;outline-offset:3px;box-shadow:0 0 18px rgba(240,192,96,0.5) !important;}
+/* STACKED CARD VISUAL */
+.card-stack-wrap{position:relative;display:block;}
+.card-stack-shadow{position:absolute;border-radius:2px;z-index:0;pointer-events:none;}
+.card-stack-shadow-1{top:5px;left:5px;right:-5px;bottom:-5px;background:rgba(0,0,0,0.3);}
+.card-stack-shadow-2{top:9px;left:9px;right:-9px;bottom:-9px;background:rgba(0,0,0,0.2);}
+.card.stacked-top{position:relative;z-index:1;}
+.card-stack-count{position:absolute;bottom:8px;left:10px;background:rgba(0,0,0,0.55);color:rgba(255,255,255,0.95);font-family:'Courier New',monospace;font-size:0.58rem;padding:2px 7px;border-radius:10px;z-index:5;pointer-events:none;letter-spacing:0.03em;}
+.card.search-dim{opacity:0.25;}
+.card.search-match{outline:2px solid var(--accent);outline-offset:2px;}
+.card-chapter-tag{display:none;} /* replaced by badge */
+/* Act + Chapter title badge — black oval, white text */
+.card-ch-badge{display:inline-block;background:rgba(0,0,0,0.75);color:#fff;font-family:'Courier New',monospace;font-size:0.52rem;font-weight:500;letter-spacing:0.05em;padding:2px 9px;border-radius:10px;margin-bottom:5px;flex-shrink:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;}
+.card-title{font-family:var(--card-font,'Courier New', Courier, monospace);font-size:calc(var(--card-font-size,0.74rem) * 0.95);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(0,0,0,0.85);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex-shrink:0;margin-bottom:1px;}
+.card-body{font-size:var(--card-font-size);font-family:var(--card-font);color:rgba(0,0,0,0.72);line-height:1.4;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;flex:1;min-height:0;margin:3px 0 4px;word-break:break-word;}
+.card-chars{display:flex;flex-wrap:nowrap;gap:3px;margin-top:auto;padding-top:3px;overflow:hidden;flex-shrink:0;align-items:center;}
+.card-char-tag{font-family:'Courier New', Courier, monospace;font-size:0.54rem;padding:1px 5px;background:rgba(0,0,0,0.15);color:rgba(0,0,0,0.65);border-radius:10px;}
+.card-actions{display:none;gap:4px;flex-wrap:wrap;position:absolute;bottom:0;left:0;right:0;padding:6px 8px 6px 8px;background:linear-gradient(to top,rgba(0,0,0,0.72) 0%,rgba(0,0,0,0.45) 60%,transparent 100%);border-radius:0 0 2px 2px;z-index:6;justify-content:flex-end;}
+.card:hover .card-actions{display:flex;}
+.card:hover .card-scene-count{z-index:10;}
+.card-btn{font-family:'Courier New', Courier, monospace;font-size:0.58rem;padding:2px 6px;border:1px solid rgba(255,255,255,0.4);background:rgba(0,0,0,0.35);cursor:pointer;color:rgba(255,255,255,0.9);border-radius:1px;transition:background 0.1s;}
+.card-btn:hover{background:rgba(0,0,0,0.6);}
+.card-btn.del{border-color:rgba(255,100,100,0.6);color:rgba(255,160,160,0.95);}
+.card-btn.del:hover{background:rgba(180,30,30,0.5);}
+.flag-corner{position:absolute;top:6px;right:6px;display:flex;gap:2px;z-index:3;flex-wrap:wrap;max-width:60px;justify-content:flex-end;}
+.flag-pip{width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.25);}
+.flag-tooltip{position:absolute;top:22px;right:6px;background:rgba(0,0,0,0.82);color:#fff;font-family:'Courier New', Courier, monospace;font-size:0.58rem;padding:4px 8px;border-radius:2px;max-width:150px;line-height:1.4;z-index:10;display:none;pointer-events:none;white-space:pre-wrap;}
+.card:hover .flag-tooltip{display:block;}
+.card-add{border:1px dashed var(--border);border-radius:2px;height:var(--card-height,190px);min-height:var(--card-height,190px);max-height:var(--card-height,190px);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.7rem;letter-spacing:0.05em;transition:border-color 0.15s,color 0.15s;flex-direction:column;gap:6px;flex:0 0 170px;width:170px;}
+.card-add:hover{border-color:var(--accent);color:var(--accent);}
+.card-add .plus{font-size:1.5rem;line-height:1;}
+.chapter-label{grid-column:1/-1;font-family:Georgia, 'Times New Roman', serif;font-size:0.95rem;color:var(--accent);padding:6px 0 2px;border-bottom:1px solid var(--border);margin-top:8px;}
+.empty-state{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.78rem;}
+.empty-state .big{font-family:Georgia, 'Times New Roman', serif;font-size:1.7rem;color:var(--accent);margin-bottom:10px;}
+
+/* ACTS VIEW */
+.acts-wrap{flex:1;overflow-y:auto;padding:20px;}
+.acts-wrap::-webkit-scrollbar{width:6px;} .acts-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.acts-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;align-items:start;}
+.act-col{display:flex;flex-direction:column;gap:10px;}
+.act-header{background:var(--surface);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;}
+.act-header-title{font-family:Georgia, 'Times New Roman', serif;font-size:1rem;color:var(--accent);}
+.act-header-count{font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);}
+.act-card{border-radius:2px;padding:10px 10px 8px;position:relative;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;}
+.act-card:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,0.4);}
+.act-card .card-chapter-tag{font-family:'Courier New', Courier, monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.07em;color:rgba(0,0,0,0.45);}
+.act-card .card-title{font-family:var(--card-font,'Courier New', Courier, monospace);font-size:calc(var(--card-font-size,0.74rem) * 0.92);font-weight:700;text-transform:uppercase;color:rgba(0,0,0,0.85);}
+.act-card .card-body{font-size:0.72rem;color:rgba(0,0,0,0.65);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.act-add{border:1px dashed var(--border);padding:10px;text-align:center;cursor:pointer;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.65rem;transition:border-color 0.15s,color 0.15s;border-radius:2px;}
+.act-add:hover{border-color:var(--accent);color:var(--accent);}
+
+/* CHARACTER PANEL */
+.char-panel{width:260px;min-width:260px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;height:100%;transition:width 0.2s;}
+.char-panel.hidden{width:0;min-width:0;overflow:hidden;}
+.char-panel-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.char-panel-title{font-family:Georgia, 'Times New Roman', serif;font-size:0.95rem;color:var(--accent);}
+.char-list{flex:1;overflow-y:auto;padding:8px;}
+.char-list::-webkit-scrollbar{width:4px;} .char-list::-webkit-scrollbar-thumb{background:var(--border);}
+.char-item{padding:8px 10px;border:1px solid var(--border);border-radius:2px;margin-bottom:6px;cursor:pointer;transition:border-color 0.12s;}
+.char-item:hover{border-color:var(--muted);}
+.char-item.char-filter-active{border-color:var(--accent);background:rgba(240,192,96,0.06);}
+.char-name{font-family:'Courier New', Courier, monospace;font-size:0.75rem;color:var(--text);font-weight:500;}
+.char-role{font-size:0.7rem;color:var(--muted);margin-top:2px;}
+.char-count{font-family:'Courier New', Courier, monospace;font-size:0.58rem;color:var(--muted);margin-top:3px;}
+.char-actions{display:none;gap:4px;margin-top:5px;}
+.char-item:hover .char-actions{display:flex;}
+.char-btn{font-family:'Courier New', Courier, monospace;font-size:0.58rem;padding:2px 6px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--muted);border-radius:1px;transition:all 0.1s;}
+.char-btn:hover{border-color:var(--accent);color:var(--accent);}
+.char-btn.del{border-color:rgba(150,0,0,0.3);color:rgba(180,60,60,0.8);}
+.char-btn.del:hover{background:rgba(255,100,100,0.15);}
+.char-panel-footer{padding:10px 8px;border-top:1px solid var(--border);flex-shrink:0;}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:300;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);width:520px;max-width:96vw;padding:26px;display:flex;flex-direction:column;gap:12px;max-height:94vh;overflow-y:auto;}
+.modal h2{font-family:Georgia, 'Times New Roman', serif;font-size:1.15rem;color:var(--accent);}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-family:'Courier New', Courier, monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);}
+.field input,.field textarea,.field select{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.86rem;padding:8px 11px;outline:none;resize:vertical;transition:border-color 0.15s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);}
+.field textarea{min-height:90px;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
+.modal-colors{display:flex;gap:7px;flex-wrap:wrap;}
+.modal-color-opt{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform 0.1s,border-color 0.1s;}
+.modal-color-opt:hover,.modal-color-opt.active{transform:scale(1.2);border-color:white;}
+.proj-color-row{display:flex;gap:7px;flex-wrap:wrap;}
+.proj-color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform 0.1s,border-color 0.1s;}
+.proj-color-swatch:hover,.proj-color-swatch.active{transform:scale(1.25);border-color:white;}
+
+/* FLAG PICKER */
+.flag-picker{display:flex;flex-direction:column;gap:6px;}
+.flag-row{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:2px;background:var(--bg);cursor:pointer;transition:border-color 0.12s;flex-wrap:wrap;}
+.flag-row:hover{border-color:var(--muted);}
+.flag-row.active{border-color:var(--accent);background:rgba(240,192,96,0.05);}
+.flag-swatch{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px;border:1.5px solid rgba(0,0,0,0.2);}
+.flag-label{font-size:0.78rem;flex:1;color:var(--text);}
+.flag-note-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.78rem;padding:5px 9px;outline:none;width:100%;margin-top:5px;display:none;transition:border-color 0.15s;}
+.flag-note-input:focus{border-color:var(--accent);}
+.flag-note-input.visible{display:block;}
+
+/* RICH EDITOR */
+.rich-toolbar{display:flex;gap:3px;align-items:center;background:var(--bg);border:1px solid var(--border);border-bottom:none;padding:4px 6px;}
+.rich-btn{background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:2px 7px;border-radius:2px;line-height:1.4;transition:background 0.1s,color 0.1s;font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;}
+.rich-btn:hover{background:var(--surface2);color:var(--accent);border-color:var(--border);}
+.rich-sep{width:1px;height:14px;background:var(--border);margin:0 3px;}
+.rich-editor{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--card-font,-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif);font-size:calc(var(--card-font-size, 0.74rem) * 1.15);padding:8px 11px;outline:none;min-height:220px;line-height:1.6;transition:border-color 0.15s;white-space:pre-wrap;word-break:break-word;}
+.rich-editor:focus{border-color:var(--accent);}
+.rich-editor:empty:before{content:attr(placeholder);color:var(--muted);pointer-events:none;}
+.rich-editor b,.rich-editor strong{color:rgba(255,255,255,0.95);}
+.rich-editor s{opacity:0.55;}
+.rich-editor ul{margin:4px 0 4px 20px;}
+
+/* ACT & CHAPTER FIELDS */
+.act-chapter-row{display:flex;gap:10px;}
+.act-chapter-row .field{flex:1;}
+.field select{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.86rem;padding:8px 11px;outline:none;transition:border-color 0.15s;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888899'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.field select:focus{border-color:var(--accent);}
+.chapter-typeahead{position:relative;}
+.chapter-typeahead-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.86rem;padding:8px 11px;outline:none;transition:border-color 0.15s;}
+.chapter-typeahead-input:focus{border-color:var(--accent);}
+.chapter-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-top:none;z-index:50;display:none;flex-direction:column;max-height:140px;overflow-y:auto;}
+.chapter-dropdown.open{display:flex;}
+.chapter-drop-item{padding:7px 11px;font-size:0.82rem;cursor:pointer;color:var(--text);transition:background 0.1s;}
+.chapter-drop-item:hover{background:var(--surface);color:var(--accent);}
+
+/* CHAR TYPEAHEAD IN CARD MODAL */
+.char-typeahead{position:relative;}
+.char-typeahead-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.86rem;padding:7px 11px;outline:none;transition:border-color 0.15s;}
+.char-typeahead-input:focus{border-color:var(--accent);}
+.char-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-top:none;z-index:50;display:none;flex-direction:column;max-height:160px;overflow-y:auto;}
+.char-dropdown.open{display:flex;}
+.char-drop-item{padding:7px 11px;font-size:0.82rem;cursor:pointer;color:var(--text);transition:background 0.1s;display:flex;align-items:center;gap:8px;}
+.char-drop-item:hover{background:var(--surface);color:var(--accent);}
+.char-drop-item.create{color:var(--accent);font-style:italic;}
+.char-drop-item .char-drop-role{font-size:0.68rem;color:var(--muted);}
+.char-selected-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;min-height:0;}
+.char-tag{display:flex;align-items:center;gap:4px;font-family:'Courier New', Courier, monospace;font-size:0.62rem;padding:3px 8px;border:1px solid var(--accent);border-radius:10px;color:var(--accent);background:rgba(240,192,96,0.08);}
+.char-tag-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:0;line-height:1;transition:color 0.1s;}
+.char-tag-remove:hover{color:#e04040;}
+
+/* CTX MENU */
+.ctx-menu{position:fixed;background:var(--surface2);border:1px solid var(--border);z-index:400;min-width:160px;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+.ctx-menu.open{display:flex;}
+.ctx-item{padding:8px 16px;font-family:'Courier New', Courier, monospace;font-size:0.7rem;cursor:pointer;transition:background 0.1s;color:var(--text);letter-spacing:0.04em;}
+.ctx-item:hover{background:var(--surface);color:var(--accent);}
+.ctx-item .ctx-sub{font-size:0.57rem;color:var(--muted);margin-top:2px;}
+.ctx-item.danger{color:#e06060;}
+.ctx-item.danger:hover{background:rgba(200,50,50,0.15);color:#ff8080;}
+.ctx-sep{height:1px;background:var(--border);margin:3px 0;}
+
+/* NO PROJECT */
+.no-project{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.8rem;}
+.no-project .big{font-family:Georgia, 'Times New Roman', serif;font-size:2rem;color:var(--accent);}
+
+/* TOAST */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#1a1a1f;border:1px solid var(--accent);color:var(--accent);font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:9px 20px;z-index:999;letter-spacing:0.05em;pointer-events:none;transition:opacity 0.4s;opacity:0;}
+
+/* MOVE MODAL LIST */
+.move-proj-btn{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 13px;cursor:pointer;text-align:left;font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.83rem;transition:border-color 0.1s;width:100%;}
+.move-proj-btn:hover{border-color:var(--accent);}
+
+/* FLAG LABEL EDITOR */
+.flag-label-editor{display:flex;align-items:center;gap:6px;}
+.flag-label-input{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.78rem;padding:4px 8px;outline:none;flex:1;transition:border-color 0.15s;}
+.flag-label-input:focus{border-color:var(--accent);}
+
+/* DRILL-DOWN BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:6px;padding:8px 20px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;font-family:'Courier New', Courier, monospace;font-size:0.68rem;color:var(--muted);flex-wrap:wrap;}
+.breadcrumb-item{cursor:pointer;color:var(--muted);transition:color 0.12s;white-space:nowrap;}
+.breadcrumb-item:hover{color:var(--accent);}
+.breadcrumb-item.current{color:var(--accent);cursor:default;font-weight:500;}
+.breadcrumb-sep{color:var(--border);flex-shrink:0;}
+.breadcrumb-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.65rem;padding:3px 9px;cursor:pointer;border-radius:2px;transition:all 0.12s;flex-shrink:0;}
+.breadcrumb-back:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SCENE COUNT BADGE ON CARD */
+.card-children-inline{width:100%;display:flex;flex-wrap:wrap;gap:12px;padding:0;margin-bottom:2px;}
+/* card-child-inline now just uses the same .card style */
+.card-child-inline{border-radius:2px;padding:11px 11px 9px;position:relative;cursor:grab;user-select:none;height:190px;min-height:190px;max-height:190px;transition:transform 0.15s,box-shadow 0.15s;display:flex;flex-direction:column;gap:0;overflow:hidden;}
+.card-child-inline:hover{transform:translateY(-2px) rotate(0.3deg);box-shadow:0 8px 24px rgba(0,0,0,0.5);z-index:2;}
+.card-child-inline .card-title{font-family:var(--card-font,'Courier New', Courier, monospace);font-size:calc(var(--card-font-size,0.74rem) * 0.95);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(0,0,0,0.85);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex-shrink:0;margin-bottom:1px;}
+.card-child-inline .card-body{font-size:var(--card-font-size);font-family:var(--card-font);color:rgba(0,0,0,0.72);line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex-shrink:0;flex:1;margin:3px 0 4px;}
+.card-child-inline .card-char-tag{font-family:'Courier New', Courier, monospace;font-size:0.54rem;padding:1px 5px;background:rgba(0,0,0,0.15);color:rgba(0,0,0,0.65);border-radius:10px;}
+.card-child-flag{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;}
+.card-scene-count{display:inline-flex;align-items:center;gap:3px;font-family:'Courier New', Courier, monospace;font-size:0.56rem;color:rgba(0,0,0,0.7);background:rgba(255,255,255,0.5);padding:2px 8px;border-radius:10px;cursor:pointer;transition:background 0.12s;position:absolute;bottom:8px;left:10px;z-index:10;border:1px solid rgba(0,0,0,0.15);}
+.card-scene-count:hover{background:rgba(255,255,255,0.8);}
+
+/* PRINT */
+@media print {
+  /* Hide all UI chrome */
+  .sidebar,.header,.view-tabs,.toolbar,.search-bar,.char-panel,
+  .card-actions,.card-add,.breadcrumb,.flag-corner,
+  #view-acts,#view-flags,#view-notes,#view-uncategorized,#view-chapters,#view-beats{display:none!important;}
+
+  body{display:block;background:white;color:#111;font-family:Georgia,serif;margin:0;padding:0;}
+  .main{display:block;overflow:visible;}
+  #view-board{display:block!important;overflow:visible;height:auto;}
+  .board{display:block!important;padding:20px 30px;}
+
+  #print-title{display:block!important;}
+  #print-subtitle{display:block!important;}
+
+  /* Chapter headers */
+  .chapter-label{
+    display:block!important;width:100%;
+    font-family:Georgia,serif;font-size:1rem;font-weight:bold;
+    color:#111!important;border-bottom:1.5px solid #999;
+    padding:6px 0 4px;margin:20px 0 10px;
+    page-break-after:avoid;
+  }
+
+  /* Cards as clean outline rows */
+  .card{
+    display:block!important;
+    width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;
+    background:white!important;border:none!important;border-bottom:1px solid #eee!important;
+    box-shadow:none!important;transform:none!important;
+    padding:8px 0!important;margin:0!important;
+    border-radius:0!important;break-inside:avoid;
+  }
+  .card-chapter-tag{display:none!important;}
+  .card-title{font-family:Georgia,serif;font-size:0.88rem;font-weight:bold;color:#111!important;text-transform:none!important;letter-spacing:0!important;}
+  .card-body{font-size:0.82rem;color:#333!important;-webkit-line-clamp:unset!important;height:auto!important;display:block!important;line-height:1.5;}
+  .card-chars{margin-top:3px!important;}
+  .card-char-tag{font-size:0.7rem;color:#666!important;background:#f0f0f0!important;border:1px solid #ddd!important;}
+  .card-scene-count,.card-index,.flag-corner,.card-actions{display:none!important;}
+
+  /* Inline beat rows */
+  .card-children-inline{
+    display:block!important;padding-left:20px!important;border-left:2px solid #ddd!important;margin:0 0 8px!important;
+  }
+  .card-children-inline .card{border-bottom:none!important;padding:4px 0!important;}
+
+  /* Flag dots as text labels */
+  .flag-pip{display:none!important;}
+}
+#print-title{display:none;font-family:Georgia,serif;font-size:1.4rem;margin:16px 0 4px;color:#111;}
+#print-subtitle{display:none;font-size:0.8rem;color:#666;margin-bottom:20px;}
+@media (pointer:coarse),(max-width:1024px){
+  input,textarea,select{font-size:16px !important;}
+  .sidebar{position:fixed !important;left:-270px;top:0;z-index:500;height:100vh;transition:left 0.25s;}
+  .sidebar.ipad-open{left:0 !important;}
+  #ipad-dim{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:499;display:none;}
+  #ipad-dim.on{display:block;}
+  #ipad-btn{display:flex !important;}
+  .overlay{z-index:600 !important;}
+  .ctx-menu{z-index:700 !important;}
+  .card-actions{display:flex !important;position:static !important;background:rgba(0,0,0,0.22) !important;padding:4px 6px 5px !important;margin-top:auto;}
+  .card{height:auto !important;min-height:170px !important;max-height:none !important;}
+  .card:hover{transform:none !important;}
+  .project-menu-btn{opacity:1 !important;}
+  .char-actions{display:flex !important;}
+  .color-dot{width:22px !important;height:22px !important;}
+  .view-tab{padding:10px 12px !important;}
+  .card-btn{padding:5px 10px !important;}
+  .modal{width:96vw !important;max-height:90vh !important;}
+  #autosave-status{display:none !important;}
+}
+</style>
+</head>
+<body>
+<div id="ipad-dim" onclick="ipadClose()"></div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>StoryDeck</h1>
+    <span style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;color:var(--muted);letter-spacing:0.04em;margin-top:3px;display:block;">©DCauterucci 2026</span>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+      <button class="btn" style="width:100%;padding:9px;font-size:0.75rem;" onclick="openNewProjectModal()">+ New Project</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn" style="flex:1;padding:9px;font-size:0.75rem;" onclick="saveManual()">💾 Save</button>
+        <button class="btn" style="flex:1;padding:9px;font-size:0.75rem;" onclick="document.getElementById('load-file-input').click()">📂 Load</button>
+      </div>
+      <div id="autosave-top" style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span id="autosave-dot" style="width:7px;height:7px;border-radius:50%;background:var(--border);display:inline-block;flex-shrink:0"></span>
+          <span id="autosave-label" style="font-family:'Courier New',monospace;font-size:0.57rem;color:var(--muted);">Not saved yet</span>
+        </div>
+        <button id="autosave-setup-btn" onclick="setupAutosave()" style="background:none;border:none;color:var(--accent);font-family:'Courier New',monospace;font-size:0.57rem;cursor:pointer;text-decoration:underline;padding:0;white-space:nowrap;">Set autosave</button>
+      </div>
+      <select id="autosave-interval" onchange="changeAutosaveInterval()" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:0.57rem;cursor:pointer;outline:none;padding:3px;width:100%;">
+        <option value="1">Autosave every 1 min</option>
+        <option value="3" selected>Autosave every 3 min</option>
+        <option value="5">Autosave every 5 min</option>
+        <option value="10">Autosave every 10 min</option>
+      </select>
+    </div>
+  </div>
+  <div class="sidebar-section-label">Projects</div>
+  <div class="project-list" id="project-list"></div>
+  <div class="sidebar-footer" style="padding:6px 10px;">
+  </div>
+</aside>
+<input type="file" id="load-file-input" accept=".json" style="display:none" onchange="loadAllProjects(event)">
+
+<!-- MAIN -->
+<div class="main" id="main">
+  <div class="no-project" id="no-project-msg">
+    <div class="big">No project yet.</div>
+    <div>Create a project to get started.</div>
+    <button class="btn" style="padding:14px 32px;font-size:0.9rem;margin-top:8px;min-width:240px;" onclick="openNewProjectModal()">+ New Project</button>
+    <button class="btn" style="padding:14px 32px;font-size:0.9rem;min-width:240px;" onclick="document.getElementById('load-file-input').click()">📂 Load Existing Project</button>
+  </div>
+
+  <div id="project-view" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+    <header>
+      <button id="ipad-btn" onclick="ipadOpen()" style="display:none;align-items:center;justify-content:center;width:38px;height:38px;background:transparent;border:1px solid var(--border);color:var(--text);font-size:1.2rem;cursor:pointer;flex-shrink:0;border-radius:2px;margin-right:4px;">☰</button>
+      <div class="header-title-wrap">
+        <div class="header-title-col">
+          <div class="header-title-row">
+            <div id="book-title-display" ondblclick="startEditTitle()"></div>
+            <input type="text" id="book-title-input" onblur="finishEditTitle()" onkeydown="titleKeydown(event)">
+            <span class="edit-title-hint" onclick="startEditTitle()" title="Rename">✎</span>
+          </div>
+          <div id="proj-desc-display" onclick="openEditProjectModal(state.activeId)" title="Click to edit"></div>
+        </div>
+      </div>
+      <!-- Search -->
+      <div style="position:relative">
+        <input type="text" id="search-input" placeholder="🔍 Search cards…" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:6px 28px 6px 10px;outline:none;width:180px;transition:border-color 0.15s,width 0.2s;" onfocus="this.style.width='220px';this.style.borderColor='var(--accent)'" onblur="this.style.width='180px';this.style.borderColor='var(--border)'" oninput="handleSearch()">
+        <button onclick="clearSearch()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0;line-height:1;">✕</button>
+      </div>
+      <span id="search-count" style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);white-space:nowrap;display:none"></span>
+      <!-- Export -->
+      <div style="position:relative;display:inline-block" id="export-wrap">
+        <button class="btn ghost" onclick="toggleExportMenu()">Export ↓</button>
+        <div id="export-menu" style="display:none;position:absolute;right:0;top:110%;background:var(--surface2);border:1px solid var(--border);min-width:200px;z-index:200;box-shadow:0 8px 20px rgba(0,0,0,0.4);">
+          <div class="ctx-item" onclick="saveManual();toggleExportMenu()">💾 Save Backup (.json)<div class="ctx-sub">Reload into this app later</div></div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item" onclick="exportTxt();toggleExportMenu()">📄 Plain Text (.txt)</div>
+          <div class="ctx-item" onclick="exportHtml();toggleExportMenu()">📝 Formatted Doc (.html)<div class="ctx-sub">Opens in Word, Google Docs</div></div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item" onclick="printBoard();toggleExportMenu()">🖨 Print Cards</div>
+        </div>
+      </div>
+      <button class="btn ghost" onclick="undo()" title="Undo (Cmd+Z)" style="padding:6px 12px;">↩ Undo</button>
+      <button class="btn" onclick="openCardModal()">+ New Card</button>
+    </header>
+
+    <!-- VIEW TABS -->
+    <div class="view-tabs">
+      <div class="view-tab active" data-view="board" onclick="switchView('board')">Board</div>
+      <div class="view-tab" data-view="beats" onclick="switchView('beats')">Beats</div>
+      <div class="view-tab" data-view="chapters" onclick="switchView('chapters')">Chapters</div>
+      <div class="view-tab" data-view="acts" onclick="switchView('acts')">Acts</div>
+      <div class="view-tab" data-view="uncategorized" onclick="switchView('uncategorized')">Ideas <span id="uncat-count-badge" style="font-size:0.58rem;background:rgba(240,192,96,0.2);color:var(--accent);padding:1px 5px;border-radius:8px;margin-left:2px;display:none"></span></div>
+      <div class="view-tab" data-view="characters" onclick="switchView('characters')">Characters</div>
+      <div class="view-tab" data-view="flags" onclick="switchView('flags')">⚙ Settings</div>
+      <div class="view-tab" data-view="notes" onclick="switchView('notes')">📝 Notes</div>
+    </div>
+
+    <!-- BREADCRUMB (shown when drilled in) -->
+    <div class="breadcrumb" id="breadcrumb" style="display:none"></div>
+
+    <!-- TOOLBAR (board view) -->
+    <div class="toolbar" id="toolbar-bar" style="flex-direction:column;align-items:stretch;gap:6px;padding:8px 20px;">
+      <!-- Row 1: Color + Sort -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="toolbar-label">Filter by Color</span>
+        <div class="color-dot active" data-filter="all" style="background:linear-gradient(135deg,#e040a0,#00b4b4,#f08030)" title="All"></div>
+        <div class="color-dot" data-filter="teal" style="background:var(--col-teal)"></div>
+        <div class="color-dot" data-filter="pink" style="background:var(--col-pink)"></div>
+        <div class="color-dot" data-filter="green" style="background:var(--col-green)"></div>
+        <div class="color-dot" data-filter="orange" style="background:var(--col-orange)"></div>
+        <div class="color-dot" data-filter="purple" style="background:var(--col-purple)"></div>
+        <div class="color-dot" data-filter="red" style="background:var(--col-red)"></div>
+        <div class="color-dot" data-filter="yellow" style="background:var(--col-yellow)"></div>
+        <div class="color-dot" data-filter="blue" style="background:var(--col-blue)"></div>
+        <div class="color-dot" data-filter="salmon" style="background:var(--col-salmon)"></div>
+        <div class="color-dot" data-filter="white" style="background:var(--col-white);border:1px solid #ddd"></div>
+        <div class="color-dot" data-filter="gray" style="background:var(--col-gray)"></div>
+        <div class="toolbar-sep"></div>
+        <span class="toolbar-label">Sort Cards</span>
+        <select id="sort-select" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.66rem;padding:3px 7px;outline:none;cursor:pointer;">
+          <option value="manual" selected>Manual (drag order)</option>
+          <option value="chapter">By Chapter</option>
+          <option value="act">By Act</option>
+          <option value="color">By Color</option>
+          <option value="character">Filter by Character…</option>
+        </select>
+      </div>
+      <!-- Row 2: Flags -->
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span class="toolbar-label">Flags</span>
+        <button class="flag-filter-btn active" id="ffbtn-all" data-flagfilter="all" onclick="setFlagFilter('all')">All Cards</button>
+        <button class="flag-filter-btn" id="ffbtn-flagged" data-flagfilter="flagged" onclick="setFlagFilter('flagged')">⚑ Any Flag</button>
+        <button class="flag-filter-btn" id="ffbtn-red" data-flagfilter="red" onclick="setFlagFilter('red')"><span class="pip" style="background:#e04040"></span><span id="fflabel-red">Questions</span></button>
+        <button class="flag-filter-btn" id="ffbtn-yellow" data-flagfilter="yellow" onclick="setFlagFilter('yellow')"><span class="pip" style="background:#d0c040"></span><span id="fflabel-yellow">Revisions</span></button>
+        <button class="flag-filter-btn" id="ffbtn-blue" data-flagfilter="blue" onclick="setFlagFilter('blue')"><span class="pip" style="background:#4080e0"></span><span id="fflabel-blue">Research</span></button>
+        <button class="flag-filter-btn" id="ffbtn-green" data-flagfilter="green" onclick="setFlagFilter('green')"><span class="pip" style="background:#40c060"></span><span id="fflabel-green">Misc</span></button>
+        <button class="flag-filter-btn" id="ffbtn-gold" data-flagfilter="gold" onclick="setFlagFilter('gold')"><span class="pip" style="background:#f0c060"></span><span id="fflabel-gold">Final ⭐</span></button>
+      </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div style="display:flex;flex:1;overflow:hidden;">
+
+      <!-- BOARD VIEW -->
+      <div id="view-board" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
+        <div class="board" id="board">
+          <div class="empty-state" id="empty-state">
+            <div class="big">Your story starts here.</div>
+            Click <strong>+ New Card</strong> to add your first beat or idea.
+          </div>
+          <div class="card-add" onclick="openCardModal()"><span class="plus">+</span><span>Add card</span></div>
+        </div>
+      </div>
+
+      <!-- BEATS VIEW -->
+      <div id="view-beats" style="flex:1;overflow-y:auto;display:none;flex-direction:column;"></div>
+
+      <!-- ACTS VIEW -->
+      <div id="view-uncategorized" style="flex:1;overflow-y:auto;display:none;flex-direction:column;"></div>
+      <div id="view-acts" style="flex:1;display:none;overflow:hidden;">
+        <div class="acts-wrap" style="height:100%;box-sizing:border-box;">
+          <div class="acts-row" id="acts-row"></div>
+        </div>
+      </div>
+
+      <!-- FLAG SETTINGS VIEW -->
+      <div id="view-characters" style="flex:1;overflow-y:auto;display:none;padding:24px;">
+        <div style="max-width:800px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h2 style="font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;color:var(--accent);">Characters</h2>
+            <button class="btn" onclick="openCharModal(null)">+ Add Character</button>
+          </div>
+          <div id="char-filter-active-name" style="display:none;margin-bottom:12px;font-family:'Courier New', Courier, monospace;font-size:0.7rem;color:var(--accent);"></div>
+          <div id="char-tab-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:24px;"></div>
+          <div style="border-top:1px solid var(--border);padding-top:16px;">
+            <div style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);letter-spacing:0.08em;margin-bottom:8px;">FILTER BOARD BY CHARACTER</div>
+            <p style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;color:var(--muted);line-height:1.6;">Click a character card above to filter the Board to only their scenes. Click again to clear.</p>
+          </div>
+        </div>
+      </div>
+      <div id="view-chapters" style="flex:1;overflow-y:auto;display:none;flex-direction:column;"></div>
+      <div id="view-flags" style="flex:1;overflow-y:auto;display:none;padding:24px;">
+        <!-- Font Settings -->
+        <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+          <div style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:12px;">Card Text Font</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;" id="font-picker"></div>
+          <div style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">Font Size</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;color:var(--muted);">A</span>
+            <input type="range" id="font-size-slider" min="8" max="24" value="12" step="1" style="flex:1;accent-color:var(--accent);" oninput="applyFontSize(this.value)">
+            <span style="font-family:'Courier New', Courier, monospace;font-size:0.8rem;color:var(--muted);">A</span>
+            <span id="font-size-label" style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;color:var(--accent);width:30px;">12px</span>
+          </div>
+        </div>
+
+        <!-- Live preview -->
+        <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+          <div style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:12px;">Live Preview</div>
+          <div id="font-preview-card" style="width:220px;background:var(--col-teal,#00b4b4);border-radius:2px;padding:11px 11px 9px;display:flex;flex-direction:column;gap:0;position:relative;">
+            <div style="font-family:'Courier New', Courier, monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(0,0,0,0.5);margin-bottom:2px;">ACT 1 › CHAPTER 1</div>
+            <div id="font-preview-title" style="font-family:var(--card-font,'Courier New', Courier, monospace);font-size:calc(var(--card-font-size,0.74rem) * 0.95);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(0,0,0,0.85);margin-bottom:1px;">THAT NIGHT / STORMS</div>
+            <div id="font-preview-body" style="font-size:0.74rem;color:rgba(0,0,0,0.72);line-height:1.4;margin:3px 0 4px;">Mario sees Gabriel letting Pablo go in a Taxi Cam and betrays him.</div>
+            <div style="display:flex;gap:3px;margin-top:auto;padding-top:3px;">
+              <span style="font-family:'Courier New', Courier, monospace;font-size:0.54rem;padding:1px 5px;background:rgba(0,0,0,0.15);color:rgba(0,0,0,0.65);border-radius:10px;">Gabriel</span>
+              <span style="font-family:'Courier New', Courier, monospace;font-size:0.54rem;padding:1px 5px;background:rgba(0,0,0,0.15);color:rgba(0,0,0,0.65);border-radius:10px;">Mario</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="max-width:520px">
+          <h2 style="font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;color:var(--accent);margin-bottom:6px">Flag Labels</h2>
+          <p style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;color:var(--muted);margin-bottom:20px;line-height:1.6">Rename each flag color to match your own story system. For example, change "Done" to "Supernatural" to track those moments. Changes apply immediately across all cards.</p>
+          <div style="display:flex;flex-direction:column;gap:12px" id="flag-settings-list"></div>
+        </div>
+      </div>
+
+      <!-- NOTES VIEW -->
+      <div id="view-notes" style="flex:1;overflow-y:auto;display:none;padding:28px;">
+        <div style="max-width:680px;display:flex;flex-direction:column;gap:12px;height:calc(100% - 40px)">
+          <div>
+            <h2 style="font-family:Georgia, 'Times New Roman', serif;font-size:1.2rem;color:var(--accent);margin-bottom:4px" id="notes-view-title">Project Notes</h2>
+            <p style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;color:var(--muted)">Character bibles, research, themes, ideas — anything that doesn't belong on a card yet.</p>
+          </div>
+          <textarea id="notes-view-input" style="flex:1;min-height:400px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--card-font,-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif);font-size:calc(var(--card-font-size,0.74rem) * 1.15);padding:14px 16px;outline:none;resize:none;line-height:1.7;transition:border-color 0.15s;" placeholder="Write anything here — character notes, research, themes, plot questions, to-do lists…" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)';saveNotesView()"></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span id="notes-word-count" style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted)"></span>
+            <button class="btn" onclick="saveNotesView()">Save Notes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARACTER PANEL -->
+      <div class="char-panel hidden" id="char-panel">
+        <div class="char-panel-header">
+          <div class="char-panel-title">Characters</div>
+          <button class="btn ghost" style="padding:3px 8px;font-size:0.65rem" onclick="toggleCharPanel()">✕</button>
+        </div>
+        <div style="padding:8px;border-bottom:1px solid var(--border);flex-shrink:0">
+          <div style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);margin-bottom:6px">Click a character to filter cards</div>
+          <button class="flag-filter-btn active" id="char-all-btn" onclick="setCharFilter(null)" style="width:100%;justify-content:center">Show all cards</button>
+        </div>
+        <div class="char-list" id="char-list"></div>
+        <div class="char-panel-footer">
+          <button class="btn-new-project" onclick="openCharModal()">+ Add Character</button>
+        </div>
+      </div>
+
+    </div><!-- end content area -->
+  </div>
+</div>
+
+<!-- CARD MODAL -->
+<div class="overlay" id="card-overlay">
+  <div class="modal">
+    <h2 id="card-modal-title">New Card</h2>
+    <div class="field"><label>Title</label><input type="text" id="card-title-input" placeholder="Scene or chapter title…" autocomplete="off" style="font-family:var(--card-font);"></div>
+    <div class="field">
+      <label>Notes / Summary</label>
+      <div class="rich-toolbar">
+        <button type="button" class="rich-btn" onclick="fmt('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button type="button" class="rich-btn" onclick="fmt('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button type="button" class="rich-btn" onclick="fmt('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button type="button" class="rich-btn" onclick="fmt('strikeThrough')" title="Strikethrough"><s>S</s></button>
+        <div class="rich-sep"></div>
+        <button type="button" class="rich-btn" onclick="fmt('insertUnorderedList')" title="Bullet list">☰</button>
+        <button type="button" class="rich-btn" onclick="clearFmt()" title="Clear formatting">✕</button>
+        <div class="rich-sep"></div>
+        <button type="button" class="rich-btn" onclick="adjustModalFontSize(-1)" title="Decrease font size" style="font-size:0.7rem;">A−</button>
+        <span id="modal-font-size-display" style="font-family:'Courier New', Courier, monospace;font-size:0.58rem;color:var(--muted);padding:0 2px;min-width:26px;text-align:center;"></span>
+        <button type="button" class="rich-btn" onclick="adjustModalFontSize(1)" title="Increase font size" style="font-size:0.85rem;">A+</button>
+      </div>
+      <div id="card-body-input" contenteditable="true" class="rich-editor" placeholder="What happens? Key details, beats, ideas…" oninput="updateCardWordCount()"></div>
+      <div style="text-align:right;margin-top:4px;"><span id="card-word-count" style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted)"></span></div>
+    </div>
+    <div class="field">
+      <label>Act</label>
+      <select id="card-act-input">
+        <option value="">— No Act —</option>
+        <option value="Act 1">Act 1</option>
+        <option value="Act 2">Act 2</option>
+        <option value="Act 3">Act 3</option>
+        <option value="Prologue">Prologue</option>
+        <option value="Epilogue">Epilogue</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <input type="text" id="card-act-custom" placeholder="Type act name…" style="display:none;margin-top:6px;width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.86rem;padding:8px 11px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      <input type="hidden" id="card-chapter-input" value="">
+    </div>
+    <div class="field">
+      <label>Characters in this beat</label>
+      <div class="char-typeahead" id="char-typeahead-wrap">
+        <input type="text" class="char-typeahead-input" id="char-search-input"
+               placeholder="Type a name to add…"
+               autocomplete="off"
+               oninput="charTypeaheadInput()"
+               onkeydown="charTypeaheadKey(event)">
+        <div class="char-dropdown" id="char-dropdown"></div>
+      </div>
+      <div class="char-selected-list" id="char-selected-list"></div>
+    </div>
+    <div class="field"><label>Card Color</label>
+      <div class="modal-colors">
+        <div class="modal-color-opt active" data-color="teal" style="background:var(--col-teal)"></div>
+        <div class="modal-color-opt" data-color="pink" style="background:var(--col-pink)"></div>
+        <div class="modal-color-opt" data-color="green" style="background:var(--col-green)"></div>
+        <div class="modal-color-opt" data-color="orange" style="background:var(--col-orange)"></div>
+        <div class="modal-color-opt" data-color="purple" style="background:var(--col-purple)"></div>
+        <div class="modal-color-opt" data-color="red" style="background:var(--col-red)"></div>
+        <div class="modal-color-opt" data-color="yellow" style="background:var(--col-yellow)"></div>
+        <div class="modal-color-opt" data-color="blue" style="background:var(--col-blue)"></div>
+        <div class="modal-color-opt" data-color="salmon" style="background:var(--col-salmon)"></div>
+        <div class="modal-color-opt" data-color="white" style="background:var(--col-white);border:1px solid #ddd"></div>
+        <div class="modal-color-opt" data-color="gray" style="background:var(--col-gray)"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Flags <span style="font-size:0.65rem;color:var(--muted);font-weight:normal;text-transform:none;letter-spacing:0">— tap to toggle one or more</span></label>
+      <div id="flag-picker" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;"></div>
+      <div id="flag-notes-area" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
+      <input type="hidden" id="flag-note-input-single">
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeCardModal()">Cancel</button>
+      <button class="btn" id="modal-delete-btn" style="background:#c03030;color:white;display:none" onclick="deleteFromModal()">Delete</button>
+      <button class="btn" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECT MODAL -->
+<div class="overlay" id="proj-overlay">
+  <div class="modal" style="width:420px">
+    <h2 id="proj-modal-title">New Project</h2>
+    <div class="field"><label>Project Name</label><input type="text" id="proj-name-input" placeholder="e.g. The Gabriel Chronicles…"></div>
+    <div class="field"><label>Description / Logline</label><textarea id="proj-desc-input" placeholder="Genre, themes, elevator pitch…" style="min-height:64px"></textarea></div>
+    <div class="field"><label>Color Tag</label>
+      <div class="proj-color-row">
+        <div class="proj-color-swatch active" data-color="#f0c060" style="background:#f0c060"></div>
+        <div class="proj-color-swatch" data-color="#00b4b4" style="background:#00b4b4"></div>
+        <div class="proj-color-swatch" data-color="#e040a0" style="background:#e040a0"></div>
+        <div class="proj-color-swatch" data-color="#40c060" style="background:#40c060"></div>
+        <div class="proj-color-swatch" data-color="#9060e0" style="background:#9060e0"></div>
+        <div class="proj-color-swatch" data-color="#f08030" style="background:#f08030"></div>
+        <div class="proj-color-swatch" data-color="#4080e0" style="background:#4080e0"></div>
+        <div class="proj-color-swatch" data-color="#e04040" style="background:#e04040"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeProjModal()">Cancel</button>
+      <button class="btn" id="proj-save-btn" onclick="saveProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHARACTER MODAL -->
+<div class="overlay" id="char-overlay">
+  <div class="modal" style="width:380px">
+    <h2 id="char-modal-title">New Character</h2>
+    <div class="field"><label>Name</label><input type="text" id="char-name-input" placeholder="e.g. Gabriel…"></div>
+    <div class="field"><label>Role / Description</label><input type="text" id="char-role-input" placeholder="e.g. Protagonist, DEA Agent…"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeCharModal()">Cancel</button>
+      <button class="btn" onclick="saveChar()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOVE MODAL -->
+<div class="overlay" id="move-overlay">
+  <div class="modal" style="width:400px">
+    <h2>Move Card To…</h2>
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:2px;">
+      <div class="move-tab active" id="mtab-chapter" onclick="switchMoveTab('chapter')" style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:7px 16px;cursor:pointer;color:var(--accent);border-bottom:2px solid var(--accent);letter-spacing:0.05em;">Into a Chapter</div>
+      <div class="move-tab" id="mtab-project" onclick="switchMoveTab('project')" style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:7px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;letter-spacing:0.05em;">To Another Project</div>
+    </div>
+    <!-- Chapter tab content -->
+    <div id="move-chapter-content">
+      <!-- Move to Uncategorized -->
+      <button onclick="moveToUncategorized()" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:9px;cursor:pointer;margin-bottom:12px;transition:all 0.12s;border-radius:2px;text-align:left;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">⬚ Move to Ideas — remove Act &amp; Chapter</button>
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);margin-bottom:8px">Pick a chapter card to nest this beat inside.</div>
+      <!-- Section: nest inside a card -->
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px">Nest inside a chapter card</div>
+      <div id="move-chapter-list" style="display:flex;flex-direction:column;gap:5px;max-height:320px;overflow-y:auto;margin-bottom:12px"></div>
+      <div id="move-label-list" style="display:none"></div>
+    </div>
+    <!-- Project tab content -->
+    <div id="move-project-content" style="display:none">
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);margin-bottom:8px">Move this card to a different project.</div>
+      <div id="move-project-list" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeMoveModal()">Cancel</button></div>
+  </div>
+</div>
+
+<!-- CTX MENU -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" onclick="ctxRename()">✎ Edit Project</div>
+  <div class="ctx-item" onclick="ctxDuplicate()">⧉ Duplicate</div>
+  <div class="ctx-item danger" onclick="ctxDelete()">✕ Delete Project</div>
+</div>
+
+<div id="toast"></div>
+
+<!-- PRINT HEADER (visible only when printing) -->
+<div id="print-title"></div>
+<div id="print-subtitle"></div>
+
+<script>
+/* =======================================
+   DATA & STATE
+======================================= */
+const COLORS = {teal:'#00b4b4',pink:'#e040a0',green:'#40c060',orange:'#f08030',purple:'#9060e0',red:'#e04040',yellow:'#d0c040',blue:'#4080e0',salmon:'#d08070',white:'#ffffff',gray:'#c8c8d8'};
+const FLAG_COLORS = {red:'#e04040',yellow:'#d0c040',blue:'#4080e0',green:'#40c060',gold:'#f0c060'};
+const FLAG_KEYS = ['red','yellow','blue','green','gold'];
+const DEFAULT_FLAG_LABELS = {red:'Questions',yellow:'Revisions',blue:'Research',green:'Misc',gold:'Final ⭐'};
+
+function loadState() {
+  return JSON.parse(localStorage.getItem('storyboard-v3')||'null') || {projects:[],activeId:null};
+}
+function saveState() {
+  localStorage.setItem('storyboard-v3', JSON.stringify(state));
+  unsavedChanges = true;
+  // updateAutosaveUI called after unsavedChanges is set
+  if (typeof updateAutosaveUI === 'function') updateAutosaveUI('unsaved');
+}
+
+let state = loadState();
+// Flag labels are stored per-project
+let editingCardId=null, selectedCardColor='teal', selectedFlag='none', selectedFlags=[], selectedFlagNotes={};
+let filterColor='all', flagFilter='all', charFilter=null;
+let dragSrcId=null, dragSrcIsStack=false, selectedProjColor='#f0c060', editingProjId=null;
+let drillStack=[]; // [{cardId, title}] - stack of parent cards we've drilled into
+let ctxTargetId=null, editingCharId=null, movingCardId=null;
+let selectedCharIds=[], searchQuery='', currentView='board';
+
+function activeProject() { return state.projects.find(p=>p.id===state.activeId)||null; }
+
+/* =======================================
+   UNDO HISTORY
+======================================= */
+const undoStack = [];
+const MAX_UNDO = 20;
+
+function pushUndo() {
+  undoStack.push(JSON.stringify(state));
+  if(undoStack.length > MAX_UNDO) undoStack.shift();
+}
+
+function undo() {
+  if(undoStack.length === 0){ showToast('Nothing to undo'); return; }
+  const prev = undoStack.pop();
+  // Close any open modal first
+  closeCardModal();
+  state = JSON.parse(prev);
+  localStorage.setItem('storyboard-v3', JSON.stringify(state));
+  renderSidebar();
+  // Re-render current view without switching away from it
+  const v = currentView;
+  if(v==='board') renderBoard();
+  else if(v==='uncategorized') renderUncategorized();
+  else if(v==='acts') renderActsView();
+  else if(v==='chapters') renderChaptersView();
+  else if(v==='characters') renderCharactersView();
+  else renderBoard();
+  showToast('Undo ✓');
+}
+
+function clearDropClasses() {
+  document.querySelectorAll('.card.drop-before,.card.drop-after,.card.drop-stack').forEach(el=>{
+    el.classList.remove('drop-before','drop-after','drop-stack');
+  });
+}
+
+/* Strip "CH N —" or "Chapter N —" prefix from a title for clean display */
+function stripChPrefix(title) {
+  return (title||'').replace(/^ch\s*\d+\s*[—\-–]+\s*/i,'').replace(/^chapter\s*\d+\s*[—\-–]+\s*/i,'').trim();
+}
+function buildChapterNumberMap(proj) {
+  if(!proj) return {};
+  const map = {};
+  let chCounter = 0;
+  proj.cards.forEach(c => {
+    if(!isCategorized(c)) return;
+    const ch = c.chapter||'';
+    if(!map[ch]) {
+      chCounter++;
+      const {act} = splitActChapter(ch);
+      map[ch] = {chNum: chCounter, act};
+    }
+  });
+  return map;
+}
+function removeDropGap() {
+  const gap = document.getElementById('active-drop-gap');
+  if(gap) gap.remove();
+}
+function getFlagLabels() {
+  const proj = activeProject();
+  return (proj && proj.flagLabels) ? {...DEFAULT_FLAG_LABELS,...proj.flagLabels} : {...DEFAULT_FLAG_LABELS};
+}
+
+/* =======================================
+   VIEWS
+======================================= */
+function switchView(view) {
+  currentView = view;
+
+  // Clear drill stack for all tabs EXCEPT beats (beats IS the drill-down view)
+  if(view !== 'beats') {
+    drillStack = [];
+    renderBreadcrumb();
+  }
+
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t.dataset.view===view));
+  document.getElementById('view-board').style.display = view==='board' ? 'flex' : 'none';
+  document.getElementById('view-beats').style.display = view==='beats' ? 'flex' : 'none';
+  document.getElementById('view-uncategorized').style.display = view==='uncategorized' ? 'flex' : 'none';
+  document.getElementById('view-acts').style.display = view==='acts' ? 'flex' : 'none';
+  document.getElementById('view-chapters').style.display = view==='chapters' ? 'flex' : 'none';
+  document.getElementById('view-characters').style.display = view==='characters' ? 'flex' : 'none';
+  document.getElementById('view-flags').style.display = view==='flags' ? 'block' : 'none';
+  document.getElementById('view-notes').style.display = view==='notes' ? 'flex' : 'none';
+  document.getElementById('toolbar-bar').style.display = view==='board' ? 'flex' : 'none';
+
+  // Reset ALL filters on every tab switch
+  flagFilter='all'; filterColor='all'; charFilter=null; searchQuery='';
+  document.querySelectorAll('.flag-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.flagfilter==='all'));
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.toggle('active',d.dataset.filter==='all'));
+  const sq = document.getElementById('search-input');
+  if(sq) sq.value='';
+  const sc = document.getElementById('search-count');
+  if(sc) sc.style.display='none';
+
+  if (view==='board') { document.getElementById('sort-select').value='manual'; renderBoard(); }
+  if (view==='beats') renderBeatsView();
+  if (view==='uncategorized') renderUncategorized();
+  if (view==='acts') renderActs();
+  if (view==='chapters') renderChaptersView();
+  if (view==='characters') renderCharTab();
+  if (view==='flags') renderFlagSettings();
+  if (view==='notes') renderNotesView();
+}
+
+/* =======================================
+   PROJECTS
+======================================= */
+function selectProject(id) {
+  state.activeId=id; saveState();
+  filterColor='all'; flagFilter='all'; charFilter=null; searchQuery=''; drillStack=[];
+  document.getElementById('search-input').value='';
+  document.getElementById('search-count').style.display='none';
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.toggle('active',d.dataset.filter==='all'));
+  document.querySelectorAll('.flag-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.flagfilter==='all'));
+  document.getElementById('sort-select').value='manual';
+  switchView('board');
+  renderSidebar(); renderProjectView();
+}
+
+function openNewProjectModal() {
+  editingProjId=null;
+  document.getElementById('proj-modal-title').textContent='New Project';
+  document.getElementById('proj-save-btn').textContent='Create Project';
+  document.getElementById('proj-name-input').value='';
+  document.getElementById('proj-desc-input').value='';
+  setProjColor('#f0c060');
+  document.getElementById('proj-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('proj-name-input').focus(),50);
+}
+function openEditProjectModal(id) {
+  const p=state.projects.find(x=>x.id===id); if(!p) return;
+  editingProjId=id;
+  document.getElementById('proj-modal-title').textContent='Edit Project';
+  document.getElementById('proj-save-btn').textContent='Save';
+  document.getElementById('proj-name-input').value=p.name;
+  document.getElementById('proj-desc-input').value=p.desc||'';
+  setProjColor(p.color);
+  document.getElementById('proj-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('proj-name-input').focus(),50);
+}
+function closeProjModal() { document.getElementById('proj-overlay').classList.remove('open'); editingProjId=null; }
+function setProjColor(color) {
+  selectedProjColor=color;
+  document.querySelectorAll('.proj-color-swatch').forEach(el=>el.classList.toggle('active',el.dataset.color===color));
+}
+document.querySelectorAll('.proj-color-swatch').forEach(el=>el.addEventListener('click',()=>setProjColor(el.dataset.color)));
+
+function saveProject() {
+  const name=document.getElementById('proj-name-input').value.trim()||'Untitled Project';
+  const desc=document.getElementById('proj-desc-input').value.trim();
+  if(editingProjId) {
+    const p=state.projects.find(x=>x.id===editingProjId);
+    p.name=name; p.color=selectedProjColor; p.desc=desc;
+  } else {
+    const np={id:Date.now().toString(),name,color:selectedProjColor,desc,cards:[],characters:[],flagLabels:{}};
+    state.projects.push(np); state.activeId=np.id;
+  }
+  saveState(); closeProjModal(); renderSidebar(); renderProjectView();
+}
+function deleteProject(id) {
+  if(!confirm('Delete this project and all its cards?')) return;
+  state.projects=state.projects.filter(p=>p.id!==id);
+  if(state.activeId===id) state.activeId=state.projects[0]?.id||null;
+  saveState(); renderSidebar(); renderProjectView();
+}
+function duplicateProject(id) {
+  const src=state.projects.find(p=>p.id===id); if(!src) return;
+  const copy=JSON.parse(JSON.stringify(src));
+  copy.id=Date.now().toString(); copy.name=src.name+' (copy)';
+  copy.cards=copy.cards.map(c=>({...c,id:(Date.now()+Math.random()).toString()}));
+  state.projects.push(copy); state.activeId=copy.id;
+  saveState(); renderSidebar(); renderProjectView();
+}
+
+/* CTX MENU */
+const ctxMenu=document.getElementById('ctx-menu');
+function showCtxMenu(e,projId) {
+  e.stopPropagation(); ctxTargetId=projId;
+  ctxMenu.style.left=e.clientX+'px';
+  ctxMenu.style.top=Math.min(e.clientY,window.innerHeight-130)+'px';
+  ctxMenu.classList.add('open');
+}
+document.addEventListener('click',()=>ctxMenu.classList.remove('open'));
+function ctxRename(){ctxMenu.classList.remove('open');openEditProjectModal(ctxTargetId);}
+function ctxDuplicate(){ctxMenu.classList.remove('open');duplicateProject(ctxTargetId);}
+function ctxDelete(){ctxMenu.classList.remove('open');deleteProject(ctxTargetId);}
+
+/* =======================================
+   SIDEBAR
+======================================= */
+function renderSidebar() {
+  const list=document.getElementById('project-list'); list.innerHTML='';
+  state.projects.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='project-item'+(p.id===state.activeId?' active':'');
+    div.innerHTML=`<div class="project-dot" style="background:${p.color}"></div><div class="project-name">${esc(p.name)}</div><div class="project-count">${p.cards.length}</div><button class="project-menu-btn">⋯</button>`;
+    div.querySelector('.project-name').onclick=()=>selectProject(p.id);
+    div.querySelector('.project-dot').onclick=()=>selectProject(p.id);
+    div.querySelector('.project-count').onclick=()=>selectProject(p.id);
+    div.querySelector('.project-menu-btn').onclick=e=>showCtxMenu(e,p.id);
+    list.appendChild(div);
+  });
+}
+
+/* =======================================
+   PROJECT VIEW
+======================================= */
+function renderProjectView() {
+  const proj=activeProject();
+  document.getElementById('no-project-msg').style.display=proj?'none':'flex';
+  const view=document.getElementById('project-view');
+  view.style.display=proj?'flex':'none';
+  if(!proj) return;
+  document.getElementById('book-title-display').textContent=proj.name;
+  const descEl=document.getElementById('proj-desc-display');
+  descEl.textContent=proj.desc||'Add a description…';
+  descEl.style.color=proj.desc?'var(--muted)':'var(--border)';
+  updateFlagFilterLabels();
+  drillStack=[]; renderBreadcrumb();
+  renderBoard(); renderCharPanel();
+  updateUncatBadge();
+  loadFontPrefs();
+  // Highlight Notes tab if project has notes
+  const activeProj = activeProject();
+  const notesTab = document.querySelector('[data-view="notes"]');
+  if (notesTab && activeProj) notesTab.style.color = activeProj.notes ? 'var(--accent)' : '';
+
+}
+
+function startEditTitle() {
+  const proj=activeProject(); if(!proj) return;
+  document.getElementById('book-title-display').style.display='none';
+  const input=document.getElementById('book-title-input');
+  input.style.display='block'; input.value=proj.name; input.focus(); input.select();
+}
+function finishEditTitle() {
+  const proj=activeProject(); if(!proj) return;
+  const input=document.getElementById('book-title-input');
+  proj.name=input.value.trim()||proj.name; saveState();
+  document.getElementById('book-title-display').textContent=proj.name;
+  input.style.display='none'; document.getElementById('book-title-display').style.display='';
+  renderSidebar();
+}
+function titleKeydown(e) {
+  if(e.key==='Enter') finishEditTitle();
+  if(e.key==='Escape'){document.getElementById('book-title-input').style.display='none';document.getElementById('book-title-display').style.display='';}
+}
+
+/* =======================================
+   CHARACTERS
+======================================= */
+function renderCharTab() {
+  const proj = activeProject(); if (!proj) return;
+  const list = document.getElementById('char-tab-list'); if (!list) return;
+  list.innerHTML = '';
+
+  if (!(proj.characters||[]).length) {
+    list.innerHTML = `<div style="font-family:monospace;font-size:0.72rem;color:var(--muted);grid-column:1/-1;">No characters yet — add one above.</div>`;
+    return;
+  }
+
+  (proj.characters||[]).forEach(c => {
+    const cardCount = getAllCards(proj.cards).filter(card => card.characters&&card.characters.includes(c.id)).length;
+    const isActive = charFilter === c.id;
+    const div = document.createElement('div');
+    div.style.cssText = `padding:12px 14px;border:1.5px solid ${isActive?'var(--accent)':'var(--border)'};border-radius:2px;cursor:pointer;background:${isActive?'rgba(240,192,96,0.06)':'transparent'};transition:all 0.12s;`;
+    div.innerHTML = `
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.75rem;font-weight:500;color:${isActive?'var(--accent)':'var(--text)'};">${esc(c.name)}</div>
+      ${c.role?`<div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">${esc(c.role)}</div>`:''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+        <span style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);">${cardCount} scene${cardCount!==1?'s':''}</span>
+        <div style="display:flex;gap:5px;">
+          <button class="char-btn" onclick="event.stopPropagation();openCharModal('${c.id}')">Edit</button>
+          <button class="char-btn del" onclick="event.stopPropagation();deleteChar('${c.id}')">Remove</button>
+        </div>
+      </div>`;
+    div.addEventListener('click', () => {
+      const newFilter = charFilter === c.id ? null : c.id;
+      charFilter = newFilter;
+      // Switch to Board to show filtered results
+      switchView('board');
+      charFilter = newFilter; // switchView clears it, restore
+      if (newFilter) {
+        // Re-apply filter after switchView
+        setTimeout(() => { charFilter = newFilter; renderBoard(); }, 10);
+      }
+    });
+    list.appendChild(div);
+  });
+}
+
+function toggleCharPanel() {
+  const panel=document.getElementById('char-panel');
+  panel.classList.toggle('hidden');
+}
+function openCharModal(id=null) {
+  editingCharId=id;
+  document.getElementById('char-modal-title').textContent=id?'Edit Character':'New Character';
+  if(id) {
+    const proj=activeProject(); const c=proj.characters.find(x=>x.id===id);
+    document.getElementById('char-name-input').value=c.name;
+    document.getElementById('char-role-input').value=c.role||'';
+  } else {
+    document.getElementById('char-name-input').value='';
+    document.getElementById('char-role-input').value='';
+  }
+  document.getElementById('char-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('char-name-input').focus(),50);
+}
+function closeCharModal(){document.getElementById('char-overlay').classList.remove('open');editingCharId=null;}
+function saveChar() {
+  const proj=activeProject(); if(!proj) return;
+  if(!proj.characters) proj.characters=[];
+  const name=document.getElementById('char-name-input').value.trim(); if(!name) return;
+  const role=document.getElementById('char-role-input').value.trim();
+  if(editingCharId) {
+    const c=proj.characters.find(x=>x.id===editingCharId);
+    c.name=name; c.role=role;
+  } else {
+    proj.characters.push({id:Date.now().toString(),name,role});
+  }
+  saveState(); closeCharModal(); renderCharPanel(); if(currentView==='characters') renderCharTab();
+}
+function deleteChar(id) {
+  const proj=activeProject(); if(!proj) return;
+  if(!confirm('Remove this character?')) return;
+  proj.characters=proj.characters.filter(c=>c.id!==id);
+  proj.cards.forEach(c=>{if(c.characters)c.characters=c.characters.filter(x=>x!==id);});
+  saveState(); renderCharPanel(); renderBoard();
+}
+function setCharFilter(id) {
+  charFilter=id;
+  document.getElementById('char-all-btn').classList.toggle('active',id===null);
+  document.querySelectorAll('.char-item').forEach(el=>el.classList.toggle('char-filter-active',el.dataset.charId===id));
+  renderBoard();
+}
+function renderCharPanel() {
+  const proj=activeProject(); if(!proj) return;
+  const list=document.getElementById('char-list'); list.innerHTML='';
+  (proj.characters||[]).forEach(c=>{
+    const cardCount=proj.cards.filter(card=>card.characters&&card.characters.includes(c.id)).length;
+    const div=document.createElement('div');
+    div.className='char-item'+(charFilter===c.id?' char-filter-active':'');
+    div.dataset.charId=c.id;
+    div.innerHTML=`<div class="char-name">${esc(c.name)}</div>${c.role?`<div class="char-role">${esc(c.role)}</div>`:''}<div class="char-count">${cardCount} card${cardCount!==1?'s':''}</div><div class="char-actions"><button class="char-btn" onclick="openCharModal('${c.id}')">Edit</button><button class="char-btn del" onclick="deleteChar('${c.id}')">Remove</button></div>`;
+    div.addEventListener('click',e=>{if(!e.target.classList.contains('char-btn'))setCharFilter(charFilter===c.id?null:c.id);});
+    list.appendChild(div);
+  });
+  if(!(proj.characters||[]).length) {
+    list.innerHTML=`<div style="font-family:'Courier New', Courier, monospace;font-size:0.65rem;color:var(--muted);padding:10px;line-height:1.6">No characters yet.<br>Add characters to tag them on cards.</div>`;
+  }
+}
+
+/* Character picker in card modal */
+function renderCharPicker(selectedIds) {
+  // Init typeahead with pre-selected ids
+  selectedCharIds = [...selectedIds];
+  document.getElementById('char-search-input').value = '';
+  renderSelectedChars();
+  document.getElementById('char-dropdown').classList.remove('open');
+}
+
+function renderSelectedChars() {
+  const proj = activeProject(); if (!proj) return;
+  const wrap = document.getElementById('char-selected-list'); wrap.innerHTML = '';
+  selectedCharIds.forEach(id => {
+    const c = (proj.characters||[]).find(x => x.id === id); if (!c) return;
+    const tag = document.createElement('div'); tag.className = 'char-tag';
+    tag.innerHTML = `${esc(c.name)}<button class="char-tag-remove" onclick="removeCharFromCard('${id}')" title="Remove">✕</button>`;
+    wrap.appendChild(tag);
+  });
+}
+
+function removeCharFromCard(id) {
+  selectedCharIds = selectedCharIds.filter(x => x !== id);
+  renderSelectedChars();
+}
+
+function charTypeaheadInput() {
+  const proj = activeProject(); if (!proj) return;
+  const q = document.getElementById('char-search-input').value.trim().toLowerCase();
+  const dropdown = document.getElementById('char-dropdown');
+  dropdown.innerHTML = '';
+  if (!q) { dropdown.classList.remove('open'); return; }
+
+  const chars = (proj.characters||[]).filter(c =>
+    c.name.toLowerCase().includes(q) && !selectedCharIds.includes(c.id)
+  );
+  chars.forEach(c => {
+    const item = document.createElement('div'); item.className = 'char-drop-item';
+    item.innerHTML = `${esc(c.name)}${c.role ? `<span class="char-drop-role">${esc(c.role)}</span>` : ''}`;
+    item.onclick = () => addCharToCard(c.id);
+    dropdown.appendChild(item);
+  });
+
+  // "Create & add" option if no exact match
+  const exactMatch = (proj.characters||[]).find(c => c.name.toLowerCase() === q);
+  if (!exactMatch) {
+    const createItem = document.createElement('div');
+    createItem.className = 'char-drop-item create';
+    createItem.innerHTML = `+ Create "<strong>${esc(document.getElementById('char-search-input').value.trim())}</strong>" and add`;
+    createItem.onclick = () => createAndAddChar(document.getElementById('char-search-input').value.trim());
+    dropdown.appendChild(createItem);
+  }
+
+  dropdown.classList.toggle('open', dropdown.children.length > 0);
+}
+
+function charTypeaheadKey(e) {
+  const dropdown = document.getElementById('char-dropdown');
+  const items = dropdown.querySelectorAll('.char-drop-item');
+  if (e.key === 'Escape') { dropdown.classList.remove('open'); return; }
+  if (e.key === 'Enter' && items.length > 0) { e.preventDefault(); items[0].click(); return; }
+}
+
+function addCharToCard(id) {
+  if (!selectedCharIds.includes(id)) selectedCharIds.push(id);
+  document.getElementById('char-search-input').value = '';
+  document.getElementById('char-dropdown').classList.remove('open');
+  renderSelectedChars();
+}
+
+function createAndAddChar(name) {
+  const proj = activeProject(); if (!proj || !name) return;
+  if (!proj.characters) proj.characters = [];
+  const newChar = { id: Date.now().toString(), name, role: '' };
+  proj.characters.push(newChar);
+  saveState(); renderCharPanel();
+  addCharToCard(newChar.id);
+  showToast('"' + name + '" added to Characters');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('char-typeahead-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('char-dropdown').classList.remove('open');
+  }
+});
+
+/* =======================================
+   FLAG LABELS
+======================================= */
+/* =======================================
+   FONT SETTINGS
+======================================= */
+const CARD_FONTS = [
+  { label: 'IBM Plex Sans', value: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif", sample: 'Aa' },
+  { label: 'Playfair Display', value: "Georgia, 'Times New Roman', serif", sample: 'Aa' },
+  { label: 'Arial', value: 'Arial, sans-serif', sample: 'Aa' },
+  { label: 'Lora', value: "Georgia, serif", sample: 'Aa' },
+  { label: 'Merriweather', value: "Georgia, serif", sample: 'Aa' },
+  { label: 'Monospace', value: "'Courier New', Courier, monospace", sample: 'Aa' },
+];
+
+let currentCardFont = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif";
+let currentCardFontSize = 12;
+
+function renderFontPicker() {
+  const picker = document.getElementById('font-picker');
+  if (!picker) return;
+  picker.innerHTML = '';
+  CARD_FONTS.forEach(f => {
+    const btn = document.createElement('button');
+    const isActive = currentCardFont === f.value;
+    btn.style.cssText = `font-family:${f.value};font-size:0.9rem;padding:6px 14px;border:1.5px solid ${isActive?'var(--accent)':'var(--border)'};background:${isActive?'rgba(240,192,96,0.1)':'transparent'};color:${isActive?'var(--accent)':'var(--text)'};cursor:pointer;border-radius:3px;transition:all 0.12s;`;
+    btn.textContent = f.label;
+    btn.onclick = () => { currentCardFont = f.value; applyCardFont(); renderFontPicker(); };
+    picker.appendChild(btn);
+  });
+  // Sync slider
+  const slider = document.getElementById('font-size-slider');
+  if (slider) slider.value = currentCardFontSize;
+  const label = document.getElementById('font-size-label');
+  if (label) label.textContent = currentCardFontSize + 'px';
+}
+
+function applyCardFont() {
+  document.documentElement.style.setProperty('--card-font', currentCardFont);
+  const editor = document.getElementById('card-body-input');
+  if (editor) editor.style.fontFamily = currentCardFont;
+  const titleInput = document.getElementById('card-title-input');
+  if (titleInput) titleInput.style.fontFamily = currentCardFont;
+  // Update live preview
+  const pb = document.getElementById('font-preview-body');
+  if (pb) pb.style.fontFamily = currentCardFont;
+  saveFontPrefs();
+}
+
+function applyFontSize(val) {
+  currentCardFontSize = parseInt(val);
+  const rem = (currentCardFontSize / 16).toFixed(3);
+  document.documentElement.style.setProperty('--card-font-size', rem + 'rem');
+  const lineH = 1.4;
+  const cardH = Math.max(160, currentCardFontSize * lineH * 3 * 1.6 + 80);
+  document.documentElement.style.setProperty('--card-height', Math.round(cardH) + 'px');
+  const label = document.getElementById('font-size-label');
+  if (label) label.textContent = val + 'px';
+  // Update live preview body size
+  const pb = document.getElementById('font-preview-body');
+  if (pb) pb.style.fontSize = rem + 'rem';
+  updateModalFontSizeDisplay();
+  saveFontPrefs();
+}
+
+function saveFontPrefs() {
+  try { localStorage.setItem('storyboard-font', currentCardFont);
+        localStorage.setItem('storyboard-fontsize', currentCardFontSize); } catch(e){}
+}
+
+function loadFontPrefs() {
+  try {
+    const f = localStorage.getItem('storyboard-font');
+    const s = localStorage.getItem('storyboard-fontsize');
+    if (f) { currentCardFont = f; applyCardFont(); }
+    if (s) { currentCardFontSize = parseInt(s); applyFontSize(s); }
+  } catch(e){}
+}
+
+function renderFlagSettings() {
+  const proj=activeProject(); if(!proj) return;
+  renderFontPicker();
+  if(!proj.flagLabels) proj.flagLabels={};
+  const labels=getFlagLabels();
+  const container=document.getElementById('flag-settings-list'); container.innerHTML='';
+  FLAG_KEYS.forEach(key=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:2px';
+    row.innerHTML=`
+      <div style="width:16px;height:16px;border-radius:50%;background:${FLAG_COLORS[key]};flex-shrink:0;border:1.5px solid rgba(0,0,0,0.2)"></div>
+      <div style="flex:1">
+        <div style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Label for ${key} flag</div>
+        <input class="flag-label-input" value="${esc(labels[key])}" placeholder="${DEFAULT_FLAG_LABELS[key]}" data-flagkey="${key}" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.85rem;padding:6px 10px;outline:none;">
+      </div>
+      <button class="btn ghost" style="font-size:0.62rem;padding:5px 10px;flex-shrink:0" onclick="resetFlagLabel('${key}')">Reset</button>
+    `;
+    row.querySelector('input').addEventListener('input', e=>{
+      proj.flagLabels[key]=e.target.value.trim()||DEFAULT_FLAG_LABELS[key];
+      saveState(); updateFlagFilterLabels(); updateFlagPickerLabels();
+    });
+    container.appendChild(row);
+  });
+}
+
+function resetFlagLabel(key) {
+  const proj=activeProject(); if(!proj) return;
+  if(!proj.flagLabels) proj.flagLabels={};
+  delete proj.flagLabels[key];
+  saveState(); renderFlagSettings(); updateFlagFilterLabels(); updateFlagPickerLabels();
+}
+
+function updateFlagFilterLabels() {
+  const labels=getFlagLabels();
+  FLAG_KEYS.forEach(key=>{
+    const el=document.getElementById('fflabel-'+key);
+    if(el) el.textContent=labels[key];
+  });
+}
+function updateFlagPickerLabels() {
+  const labels=getFlagLabels();
+  FLAG_KEYS.forEach(key=>{
+    const el=document.getElementById('flabel-'+key);
+    if(el) el.textContent=labels[key];
+  });
+  updateFlagDropdownLabels();
+}
+
+/* =======================================
+   CARDS
+======================================= */
+function openCardModal(id=null) {
+  const proj=activeProject(); if(!proj) return;
+  pushUndo();
+  editingCardId=id;
+  document.getElementById('card-overlay').classList.add('open');
+  document.getElementById('card-modal-title').textContent=id?'Edit Card':'New Card';
+  const delBtn=document.getElementById('modal-delete-btn');
+  if(delBtn) delBtn.style.display=id?'block':'none';
+  updateFlagPickerLabels();
+  if(id) {
+    const c=findCardAnywhere(proj.cards, id);
+    document.getElementById('card-title-input').value=c.title;
+    document.getElementById('card-body-input').innerHTML=c.body||'';
+    setTimeout(updateCardWordCount, 50);
+    const {act:loadedAct} = splitActChapter(c.chapter||'');
+    setActField(loadedAct);
+    setCardColor(c.color); selectedFlagNotes={}; renderFlagPicker(c.flags&&c.flags.length?c.flags:(c.flag&&c.flag!=='none'?[c.flag]:[]), c.flagNote||'', c.flagNotes||{});
+    selectedCharIds=[...(c.characters||[])];
+  } else {
+    document.getElementById('card-title-input').value='';
+    document.getElementById('card-body-input').innerHTML='';
+    updateCardWordCount();
+    selectedFlagNotes={}; renderFlagPicker([], '', {});
+    if (drillStack.length > 0) {
+      const parentId = drillStack[drillStack.length - 1].cardId;
+      const parentCard = findCardAnywhere(proj.cards, parentId);
+      if (parentCard) {
+        const {act: pAct} = splitActChapter(parentCard.chapter || '');
+        setActField(pAct);
+        selectedCharIds = [...(parentCard.characters || [])];
+        setCardColor(parentCard.color || 'white');
+      } else {
+        setActField(''); selectedCharIds = [];
+      }
+    } else {
+      setActField(''); selectedCharIds = [];
+      setCardColor('white');
+    }
+  }
+  renderCharPicker(selectedCharIds);
+  setTimeout(()=>{
+    const ti = document.getElementById('card-title-input');
+    ti.focus(); ti.select();
+  },50);
+}
+function closeCardModal(){
+  document.getElementById('card-overlay').classList.remove('open');
+  editingCardId=null;
+}
+function deleteFromModal() {
+  if (!editingCardId) return;
+  const btn = document.getElementById('modal-delete-btn');
+  if (btn.dataset.confirming === '1') {
+    // Second click — confirmed
+    const id = editingCardId;
+    closeCardModal();
+    doDeleteCard(id);
+  } else {
+    // First click — ask for confirmation
+    btn.dataset.confirming = '1';
+    btn.textContent = 'Confirm Delete';
+    btn.style.background = '#8b0000';
+    // Auto-reset after 3 seconds
+    setTimeout(() => {
+      if (btn.dataset.confirming === '1') {
+        btn.dataset.confirming = '0';
+        btn.textContent = 'Delete';
+        btn.style.background = '#c03030';
+      }
+    }, 3000);
+  }
+}
+
+function setCardColor(color) {
+  selectedCardColor=color;
+  document.querySelectorAll('.modal-color-opt').forEach(el=>el.classList.toggle('active',el.dataset.color===color));
+}
+document.querySelectorAll('.modal-color-opt').forEach(el=>el.addEventListener('click',()=>setCardColor(el.dataset.color)));
+document.getElementById('card-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('card-overlay'))closeCardModal();});
+document.getElementById('proj-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('proj-overlay'))closeProjModal();});
+document.getElementById('char-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('char-overlay'))closeCharModal();});
+document.getElementById('move-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('move-overlay'))closeMoveModal();});
+
+function saveCard() {
+  const proj=activeProject(); if(!proj) return;
+  const title=document.getElementById('card-title-input').value.trim();
+  const body=document.getElementById('card-body-input').innerHTML.trim();
+  const actVal = getActValue();
+  const bodyText=document.getElementById('card-body-input').innerText.trim();
+  if(!title&&!bodyText){closeCardModal();return;}
+
+  if(editingCardId) {
+    const c=findCardAnywhere(proj.cards, editingCardId);
+    if(!c){closeCardModal();return;}
+    const {act: oldAct} = splitActChapter(c.chapter||'');
+    const chapterTitle = c.chapterTitle || c.title; // preserve existing chapter title
+    c.title=title;
+    c.body=body;
+    c.chapter = buildChapter(actVal||oldAct, chapterTitle);
+    c.color=selectedCardColor;
+    c.flag=selectedFlags.length>0?selectedFlags[0]:'none';
+    c.flags=[...selectedFlags];
+    c.flagNotes=getFlagNotesObj();
+    c.flagNote=getFlagNote();
+    c.characters=[...selectedCharIds];
+  } else {
+    let chapterTitle = title;
+    let chapter;
+    // Check if chapter input has a preset value (from openCardModalForChapter)
+    const presetChapter = document.getElementById('card-chapter-input').value.trim();
+    if(drillStack.length > 0) {
+      const parentId = drillStack[drillStack.length-1].cardId;
+      const parent = findCardAnywhere(proj.cards, parentId);
+      chapterTitle = parent ? (parent.chapterTitle||parent.title) : title;
+      chapter = parent ? parent.chapter : buildChapter(actVal, chapterTitle);
+      const cc2 = currentChildrenArray();
+      cc2.push({id:Date.now().toString(),title,body,chapter,chapterTitle,color:selectedCardColor,flag:selectedFlags.length>0?selectedFlags[0]:'none',flags:[...selectedFlags],flagNotes:getFlagNotesObj(),flagNote:getFlagNote(),characters:[...selectedCharIds],children:[],order:cc2.length});
+    } else if(presetChapter) {
+      // Adding from Chapters view — use preset chapter key, inherit chapterTitle from group
+      chapter = presetChapter;
+      let firstInChapter = null;
+      function findFirst(cards){cards.forEach(c=>{if(!firstInChapter&&c.chapter===presetChapter)firstInChapter=c;if(c.children)findFirst(c.children);});}
+      findFirst(proj.cards);
+      chapterTitle = firstInChapter ? (firstInChapter.chapterTitle||firstInChapter.title) : title;
+      const newCard = {id:Date.now().toString(),title,body,chapter,chapterTitle,color:selectedCardColor,flag:selectedFlags.length>0?selectedFlags[0]:'none',flags:[...selectedFlags],flagNotes:getFlagNotesObj(),flagNote:getFlagNote(),characters:[...selectedCharIds],children:[],order:0};
+      let insertIdx = -1;
+      proj.cards.forEach((c,i)=>{ if(c.chapter===presetChapter) insertIdx=i; });
+      if(insertIdx>=0){ proj.cards.splice(insertIdx+1,0,newCard); proj.cards.forEach((c,i)=>c.order=i); }
+      else { newCard.order=proj.cards.length; proj.cards.push(newCard); }
+    } else {
+      chapter = buildChapter(actVal, chapterTitle);
+      const newCard = {id:Date.now().toString(),title,body,chapter,chapterTitle,color:selectedCardColor,flag:selectedFlags.length>0?selectedFlags[0]:'none',flags:[...selectedFlags],flagNotes:getFlagNotesObj(),flagNote:getFlagNote(),characters:[...selectedCharIds],children:[],order:0};
+      if(actVal) {
+        let insertIdx = -1;
+        proj.cards.forEach((c,i) => {
+          const {act} = splitActChapter(c.chapter||'');
+          if(act === actVal) insertIdx = i;
+        });
+        if(insertIdx >= 0) {
+          proj.cards.splice(insertIdx+1, 0, newCard);
+          proj.cards.forEach((c,i) => c.order=i);
+        } else {
+          newCard.order = proj.cards.length;
+          proj.cards.push(newCard);
+        }
+      } else {
+        newCard.order = proj.cards.length;
+        proj.cards.push(newCard);
+      }
+    }
+  }
+  saveState(); renderSidebar(); updateUncatBadge();
+  if(currentView==='uncategorized') renderUncategorized();
+  else if(currentView==='chapters') renderChaptersView();
+  else if(currentView==='beats') renderBeatsView();
+  else renderBoard();
+  closeCardModal();
+}
+
+function deleteCard(id) {
+  const proj=activeProject(); if(!proj) return;
+  // Find the card element and show inline confirm
+  const cardEl = document.querySelector(`[data-id="${id}"]`);
+  if(cardEl) {
+    const existing = cardEl.querySelector('.delete-confirm');
+    if(existing) { doDeleteCard(id); return; } // second click = confirm
+    const confirm = document.createElement('div');
+    confirm.className = 'delete-confirm';
+    confirm.style.cssText = 'position:absolute;inset:0;background:rgba(180,30,30,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:20;border-radius:2px;';
+    confirm.innerHTML = `<div style="font-family:'Courier New', Courier, monospace;font-size:0.72rem;color:#fff;font-weight:500">Delete this card?</div><div style="display:flex;gap:8px"><button onclick="event.stopPropagation();doDeleteCard('${id}')" style="background:#fff;border:none;color:#c00;font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:4px 14px;cursor:pointer;border-radius:2px;font-weight:600">Delete</button><button onclick="event.stopPropagation();this.closest('.delete-confirm').remove()" style="background:transparent;border:1px solid rgba(255,255,255,0.5);color:#fff;font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:4px 14px;cursor:pointer;border-radius:2px">Cancel</button></div>`;
+    cardEl.appendChild(confirm);
+    // Auto-dismiss after 4 seconds
+    setTimeout(()=>confirm.remove(), 4000);
+  } else {
+    doDeleteCard(id);
+  }
+}
+
+function doDeleteCard(id) {
+  const proj=activeProject(); if(!proj) return;
+  pushUndo();
+  function removeFromArray(arr) {
+    const i=arr.findIndex(c=>c.id===id);
+    if(i!==-1){arr.splice(i,1);arr.forEach((c,j)=>c.order=j);return true;}
+    for(const c of arr){if(c.children && removeFromArray(c.children))return true;}
+    return false;
+  }
+  removeFromArray(proj.cards);
+  if(drillStack.length>0 && drillStack[drillStack.length-1].cardId===id){
+    drillStack=[];renderBreadcrumb();
+  }
+  saveState(); renderSidebar(); updateUncatBadge();
+  if(currentView==='uncategorized') renderUncategorized();
+  else if(currentView==='chapters') renderChaptersView();
+  else if(currentView==='beats') renderBeatsView();
+  else renderBoard();
+}
+
+/* DRAG WARNING */
+function showDragWarning(cardId) {
+  // Show a toast with an action button to open the edit modal
+  const t = document.getElementById('toast');
+  t.innerHTML = `Add an Act first to place on Board — <button onclick="openCardModal('${cardId}');this.parentElement.style.opacity=0" style="background:none;border:1px solid var(--accent);color:var(--accent);font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:2px 10px;cursor:pointer;margin-left:8px;border-radius:2px;">Edit card</button>`;
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = '0'; t.innerHTML = ''; }, 4000);
+}
+
+/* RENAME CHAPTER */
+function renameChapter(oldChapter) {
+  const proj = activeProject(); if (!proj) return;
+  const {act, chapter} = splitActChapter(oldChapter);
+
+  // Build inline prompt using a small overlay on the chapter label
+  const newChapRaw = window.prompt(`Rename "${chapter||oldChapter}" to:`, chapter||oldChapter);
+  if (!newChapRaw || newChapRaw.trim() === '') return;
+
+  let newChap = newChapRaw.trim();
+  // Auto-prefix if just a number
+  if (/^\d+$/.test(newChap)) newChap = 'Chapter ' + newChap;
+
+  // Build new full chapter string with same act
+  const newFull = buildChapter(act, newChap);
+
+  // Update ALL cards (including children) that have this chapter
+  let count = 0;
+  function updateCards(cards) {
+    cards.forEach(c => {
+      if (c.chapter === oldChapter) { c.chapter = newFull; count++; }
+      if (c.children) updateCards(c.children);
+    });
+  }
+  updateCards(proj.cards);
+
+  saveState(); renderBoard();
+  showToast(`Renamed to "${newChap}" — ${count} card${count!==1?'s':''} updated`);
+}
+
+/* DUPLICATE CARD */
+function duplicateCard(id) {
+  const proj = activeProject(); if (!proj) return;
+  const src = findCardAnywhere(proj.cards, id); if (!src) return;
+  pushUndo();
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = Date.now().toString();
+  copy.title = (src.title||'') + ' (copy)';
+  copy.children = [];
+  // Insert immediately after the original
+  const srcIdx = proj.cards.findIndex(x => x.id === id);
+  if(srcIdx !== -1) {
+    proj.cards.splice(srcIdx + 1, 0, copy);
+    proj.cards.forEach((c,i) => c.order = i);
+  } else {
+    copy.order = proj.cards.length;
+    proj.cards.push(copy);
+  }
+  saveState(); renderSidebar(); renderBoard(); updateUncatBadge();
+  showToast('Card duplicated');
+}
+
+/* MOVE CARD */
+let movingCardIdVal=null;
+let moveTabActive='chapter';
+
+function switchMoveTab(tab) {
+  moveTabActive=tab;
+  document.getElementById('move-chapter-content').style.display = tab==='chapter'?'block':'none';
+  document.getElementById('move-project-content').style.display = tab==='project'?'block':'none';
+  const chTab=document.getElementById('mtab-chapter');
+  const prTab=document.getElementById('mtab-project');
+  chTab.style.color = tab==='chapter'?'var(--accent)':'var(--muted)';
+  chTab.style.borderBottomColor = tab==='chapter'?'var(--accent)':'transparent';
+  prTab.style.color = tab==='project'?'var(--accent)':'var(--muted)';
+  prTab.style.borderBottomColor = tab==='project'?'var(--accent)':'transparent';
+}
+
+function openMoveModal(cardId) {
+  movingCardIdVal=cardId;
+  const proj=activeProject(); if(!proj) return;
+  switchMoveTab('chapter');
+
+  // -- Chapter cards list (cards with children or any card that's a chapter)
+  const chList=document.getElementById('move-chapter-list'); chList.innerHTML='';
+  const rootCards=proj.cards.filter(c=>c.id!==cardId);
+  if(rootCards.length===0){
+    chList.innerHTML='<div style="color:var(--muted);font-family:&quot;IBM Plex Mono&quot;,monospace;font-size:0.72rem;padding:6px 0">No chapter cards yet - create one first.</div>';
+  } else {
+    rootCards.forEach(c=>{
+      const btn=document.createElement('button');
+      btn.className='move-proj-btn';
+      const bg=COLORS[c.color]||'#888';
+      const childCount=(c.children||[]).length;
+      btn.innerHTML=`<span style="width:10px;height:10px;border-radius:50%;background:${bg};flex-shrink:0;border:1px solid rgba(0,0,0,0.2)"></span><span style="flex:1;font-size:0.82rem">${esc(c.title||'(untitled)')}</span><span style="font-family:'Courier New', Courier, monospace;font-size:0.58rem;color:var(--muted)">${childCount+1} beat${(childCount+1)!==1?'s':''}</span>`;
+      btn.onclick=()=>moveCardIntoParent(c.id);
+      chList.appendChild(btn);
+    });
+  }
+
+  // -- Chapter label suggestions (existing labels used in the project)
+  const labelList=document.getElementById('move-label-list'); labelList.innerHTML='';
+  const movingCard=findCardAnywhere(proj.cards, cardId);
+  const usedLabels=[...new Set(
+    getAllCards(proj.cards)
+      .map(c=>splitActChapter(c.chapter||'').chapter)
+      .filter(ch=>ch)
+  )].sort();
+  if(!usedLabels.length){
+    labelList.innerHTML='<span style="font-family:&quot;IBM Plex Mono&quot;,monospace;font-size:0.65rem;color:var(--muted)">No chapter labels used yet.</span>';
+  } else {
+    usedLabels.forEach(label=>{
+      const btn=document.createElement('button');
+      btn.style.cssText='font-family:"Courier New",monospace;font-size:0.65rem;padding:4px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;border-radius:2px;transition:all 0.12s;';
+      btn.textContent=label;
+      const currentChapter=splitActChapter(movingCard?.chapter||'').chapter;
+      if(currentChapter===label){btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';}
+      btn.onmouseover=()=>{btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';}
+      btn.onmouseout=()=>{const cur=splitActChapter(movingCard?.chapter||'').chapter;if(cur!==label){btn.style.borderColor='var(--border)';btn.style.color='var(--muted)';}}
+      btn.onclick=()=>changeCardChapterLabel(label);
+      labelList.appendChild(btn);
+    });
+  }
+
+  // -- Projects list
+  const pList=document.getElementById('move-project-list'); pList.innerHTML='';
+  state.projects.forEach(p=>{
+    if(p.id===state.activeId) return;
+    const btn=document.createElement('button');
+    btn.className='move-proj-btn';
+    btn.innerHTML=`<span style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></span><span style="flex:1">${esc(p.name)}</span><span style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted)">${p.cards.length} cards</span>`;
+    btn.onclick=()=>moveCardToProject(p.id);
+    pList.appendChild(btn);
+  });
+  if(!pList.children.length) pList.innerHTML='<div style="color:var(--muted);font-family:&quot;IBM Plex Mono&quot;,monospace;font-size:0.72rem;padding:8px 0">No other projects yet.</div>';
+
+  document.getElementById('move-overlay').classList.add('open');
+}
+
+function getAllCards(cards) {
+  let all=[];
+  cards.forEach(c=>{all.push(c);if(c.children)all=all.concat(getAllCards(c.children));});
+  return all;
+}
+
+function closeMoveModal(){document.getElementById('move-overlay').classList.remove('open');movingCardIdVal=null;}
+
+function moveToUncategorized() {
+  const proj = activeProject(); if (!proj || !movingCardIdVal) return;
+  const card = findCardAnywhere(proj.cards, movingCardIdVal); if (!card) return;
+
+  // Remove card from wherever it currently lives (children array or root)
+  function removeFromArray(arr) {
+    const i = arr.findIndex(c => c.id === movingCardIdVal);
+    if (i !== -1) { arr.splice(i, 1); arr.forEach((c,j) => c.order=j); return true; }
+    for (const c of arr) { if (c.children && removeFromArray(c.children)) return true; }
+    return false;
+  }
+  removeFromArray(proj.cards);
+
+  // Clear chapter and add to root proj.cards
+  card.chapter = '';
+  card.children = card.children || [];
+  card.order = proj.cards.length;
+  proj.cards.push(card);
+
+  saveState(); renderSidebar(); updateUncatBadge();
+  if(currentView==='uncategorized') renderUncategorized();
+  else renderBoard();
+  closeMoveModal();
+  showToast('"' + (card.title||'Card') + '" moved to Ideas');
+}
+
+function moveCardIntoParent(parentId) {
+  const proj=activeProject(); if(!proj||!movingCardIdVal) return;
+  // Remove from current location
+  const cc=currentCards();
+  const idx=cc.findIndex(c=>c.id===movingCardIdVal);
+  if(idx===-1){showToast('Can only move top-level cards into a chapter');closeMoveModal();return;}
+  const [card]=cc.splice(idx,1);
+  cc.forEach((c,i)=>c.order=i);
+  // Add to parent's children
+  const parent=findCardAnywhere(proj.cards, parentId);
+  if(!parent.children) parent.children=[];
+  card.order=parent.children.length;
+  parent.children.push(card);
+  saveState(); renderSidebar(); renderBoard(); closeMoveModal();
+  showToast('"'+card.title+'" moved into "'+parent.title+'"');
+}
+
+function changeCardChapterLabel(newLabel) {
+  const proj=activeProject(); if(!proj||!movingCardIdVal) return;
+  const card=findCardAnywhere(proj.cards, movingCardIdVal); if(!card) return;
+  const {act}=splitActChapter(card.chapter||'');
+  card.chapter=buildChapter(act, newLabel);
+  saveState(); renderBoard(); closeMoveModal();
+  showToast('Chapter label updated to "'+newLabel+'"');
+}
+
+function moveCardToProject(targetId) {
+  const srcProj=activeProject(); if(!srcProj||!movingCardIdVal) return;
+  const cc=currentCards();
+  const idx=cc.findIndex(c=>c.id===movingCardIdVal);
+  if(idx===-1){showToast('Can only move top-level cards to another project');closeMoveModal();return;}
+  const [card]=cc.splice(idx,1);
+  cc.forEach((c,i)=>c.order=i);
+  const tgt=state.projects.find(p=>p.id===targetId);
+  card.order=tgt.cards.length; tgt.cards.push(card);
+  saveState(); renderSidebar(); renderBoard(); closeMoveModal();
+  showToast('Card moved to '+tgt.name);
+}
+
+/* =======================================
+   BOARD
+======================================= */
+function renderBoard() {
+  const proj=activeProject(); if(!proj) return;
+  const board=document.getElementById('board');
+  const sortVal=document.getElementById('sort-select').value;
+  const empty=document.getElementById('empty-state');
+  const sq=searchQuery.toLowerCase().trim();
+
+  let visible;
+  if(drillStack.length > 0) {
+    // DRILL-IN VIEW: flat list of parent + all children, fully equal
+    visible = currentCards();
+  } else {
+    // ROOT BOARD VIEW: parent cards only (children shown via beats badge)
+    const cards = proj.cards;
+    visible = filterColor==='all'?[...cards]:cards.filter(c=>c.color===filterColor);
+    if(flagFilter==='flagged') visible=visible.filter(c=>(c.flags&&c.flags.length)||(c.flag&&c.flag!=='none'));
+    else if(flagFilter!=='all') visible=visible.filter(c=>(c.flags&&c.flags.includes(flagFilter))||(c.flag===flagFilter));
+    if(charFilter) visible=visible.filter(c=>c.characters&&c.characters.includes(charFilter));
+  }
+
+  // Universal sort helper — categorized first, uncategorized last by act>chapter>neither
+  function sortCards(arr, byChapter, byAct) {
+    arr.sort((a,b)=>{
+      const aCat=isCategorized(a), bCat=isCategorized(b);
+      // Categorized always before uncategorized
+      if(aCat!==bCat) return aCat?-1:1;
+      if(aCat && bCat) {
+        // Both categorized — sort by chapter/act
+        const ca=a.chapter||'', cb=b.chapter||'';
+        if(byAct){const aa=splitActChapter(ca).act||'',ab=splitActChapter(cb).act||'';if(aa!==ab)return aa.localeCompare(ab);}
+        if(byChapter) return ca.localeCompare(cb)||a.order-b.order;
+      }
+      // Both uncategorized — act-only > chapter-only > neither
+      const {act:aA,chapter:aC}=splitActChapter(a.chapter||'');
+      const {act:bA,chapter:bC}=splitActChapter(b.chapter||'');
+      const aS=(aA?2:0)+(aC?1:0), bS=(bA?2:0)+(bC?1:0);
+      if(aS!==bS) return bS-aS;
+      return a.order-b.order;
+    });
+  }
+
+  if(sortVal==='chapter') sortCards(visible, true, false);
+  else if(sortVal==='act') sortCards(visible, true, true);
+  else if(sortVal==='color') visible.sort((a,b)=>a.color.localeCompare(b.color));
+  else sortCards(visible, false, false);
+
+  Array.from(board.children).forEach(el=>{if(!el.classList.contains('card-add')&&el.id!=='empty-state')el.remove();});
+  empty.style.display=visible.length===0?'block':'none';
+  const addBtn=board.querySelector('.card-add');
+
+  let matchCount=0;
+  let cardIndex=0;
+
+  if((sortVal==='chapter'||sortVal==='act') && drillStack.length===0) {
+    // GROUPED VIEW — chapter dividers + parent card + inline beats
+    let lastCh=null;
+    // Group cards by chapter
+    const chapterGroups = [];
+    const seenChapters = [];
+    visible.forEach(c=>{
+      const ch = c.chapter||'';
+      if(!seenChapters.includes(ch)) seenChapters.push(ch);
+    });
+    seenChapters.forEach(ch=>{
+      const parents = visible.filter(x=>x.chapter===ch);
+      const flat = [];
+      parents.forEach(p=>{ flat.push(p); (p.children||[]).forEach(child=>flat.push(child)); });
+      chapterGroups.push({ch, flat});
+    });
+
+    chapterGroups.forEach(({ch, flat})=>{
+      // Chapter divider
+      const lbl=document.createElement('div');
+      lbl.className='chapter-label';
+      lbl.style.cssText='width:100%;display:flex;align-items:center;margin-top:12px;gap:8px;';
+      const {act,chapter}=splitActChapter(ch);
+      const titleSpan=document.createElement('span');
+      titleSpan.style.cssText='display:flex;align-items:center;gap:6px;flex:1;min-width:0;';
+      if(act&&chapter){
+        // Board divider: Act + chapterTitle (or parent card title)
+        const parentCard = flat[0];
+        const chTitle = parentCard ? (parentCard.chapterTitle || stripChPrefix(parentCard.title||'')) : chapter;
+        titleSpan.innerHTML=`<span style="opacity:0.55;font-size:0.75rem;flex-shrink:0;">${esc(act)}</span><span style="opacity:0.35;flex-shrink:0;">›</span><span style="font-size:1rem;">${esc(chTitle||chapter)}</span>`;
+      } else {
+        titleSpan.textContent=ch||'Ideas';
+      }
+      lbl.appendChild(titleSpan);
+      // Rename button
+      const renBtn=document.createElement('button');
+      renBtn.textContent='✎';
+      renBtn.title='Rename chapter';
+      renBtn.style.cssText='background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:1px 4px;opacity:0;transition:opacity 0.15s;';
+      renBtn.onclick=(e)=>{e.stopPropagation();renameChapter(ch);};
+      lbl.appendChild(renBtn);
+      lbl.addEventListener('mouseenter',()=>renBtn.style.opacity='1');
+      lbl.addEventListener('mouseleave',()=>renBtn.style.opacity='0');
+      const cs=document.createElement('span');
+      cs.style.cssText='margin-left:auto;font-family:"Courier New",monospace;font-size:0.6rem;color:var(--muted);font-weight:normal';
+      cs.textContent=flat.length+' card'+(flat.length!==1?'s':'');
+      lbl.appendChild(cs);
+      board.insertBefore(lbl,addBtn);
+
+      // All cards in chapter as equal flat draggable row
+      const childRow=document.createElement('div');
+      childRow.className='card-children-inline';
+      flat.forEach(c=>{
+        cardIndex++;
+        const el=makeCard(c,sq,cardIndex);
+        if(sq&&el.classList.contains('search-match'))matchCount++;
+        childRow.appendChild(el);
+      });
+      board.insertBefore(childRow,addBtn);
+    });
+  } else {
+    // FLAT VIEW — manual, color, drill-in
+    visible.forEach((c,i)=>{
+      const el=makeCard(c,sq,i+1);
+      if(sq&&el.classList.contains('search-match'))matchCount++;
+      board.insertBefore(el,addBtn);
+    });
+  }
+
+  const countEl=document.getElementById('search-count');
+  if(sq){countEl.style.display='';countEl.textContent=matchCount+' match'+(matchCount!==1?'es':'');}
+  else{countEl.style.display='none';}
+
+  // Update Add card button to hint at active color filter
+  const addCardBtn = board.querySelector('.card-add span:last-child');
+  if(addCardBtn) {
+    addCardBtn.textContent = (filterColor && filterColor !== 'all') 
+      ? `Add ${filterColor} card` 
+      : 'Add card';
+  }
+}
+
+function makeCard(c, sq='', cardIndex=null) {
+  const bg=COLORS[c.color]||'#ccc';
+  const div=document.createElement('div'); div.className='card'; div.dataset.id=c.id; div.style.background=bg; div.draggable=true;
+  const labels=getFlagLabels();
+
+  // Search matching
+  const searchIn=(c.title+' '+(c.body||'').replace(/<[^>]+>/g,' ')+' '+(c.chapter||'')).toLowerCase();
+  if(sq) { if(searchIn.includes(sq)) div.classList.add('search-match'); else div.classList.add('search-dim'); }
+
+  const cardFlags = (c.flags&&c.flags.length) ? c.flags : (c.flag&&c.flag!=='none'?[c.flag]:[]);
+  const flagHtml = cardFlags.length
+    ? `<div class="flag-corner">${cardFlags.map(f=>{const fn=(c.flagNotes&&c.flagNotes[f])||'';return `<div class="flag-pip" style="background:${FLAG_COLORS[f]||'#888'}" title="${esc(labels[f]||f)}${fn?' - '+esc(fn):''}"></div>`;}).join('')}</div>`
+    : '';
+
+  const proj=activeProject();
+  const charNames=(c.characters||[]).map(id=>{const ch=(proj.characters||[]).find(x=>x.id===id);return ch?ch.name:null;}).filter(Boolean);
+  const maxChars=4;
+  const visibleChars=charNames.slice(0,maxChars);
+  const extraChars=charNames.length-maxChars;
+  const charHtml=charNames.length?`<div class="card-chars">${visibleChars.map(n=>`<div class="card-char-tag">${esc(n)}</div>`).join('')}${extraChars>0?`<div class="card-char-tag" style="background:rgba(0,0,0,0.2);color:rgba(0,0,0,0.55)">+${extraChars}</div>`:''}</div>`:'';
+
+  const childCount = (c.children||[]).length;
+  const beatTotal = childCount + 1;
+  const bodyPreview = (c.body||'').replace(/<br\s*\/?>/gi,' ').replace(/<\/p>/gi,' ').replace(/<\/div>/gi,' ').replace(/<\/li>/gi,' ').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+
+  // Build "ACT 1 — CHAPTER TITLE" badge — hidden when drilled in
+  const {act} = splitActChapter(c.chapter||'');
+  const chTitle = c.chapterTitle || stripChPrefix(c.title||'');
+  let badgeText = '';
+  if(act && chTitle) badgeText = act.toUpperCase() + ' — ' + chTitle.toUpperCase();
+  else if(act) badgeText = act.toUpperCase();
+  else if(chTitle) badgeText = chTitle.toUpperCase();
+  const badgeHtml = badgeText ? `<div class="card-ch-badge">${esc(badgeText)}</div>` : '';
+
+  div.innerHTML=`${flagHtml}${badgeHtml}
+<div class="card-title">${esc(c.title)}</div>
+<div class="card-body">${esc(bodyPreview)}</div>
+<div class="card-actions">
+  ${(childCount > 0 && drillStack.length === 0) ? `<button class="card-btn" onclick="drillInto('${c.id}')">▶ Open</button>` : ''}
+  <button class="card-btn" onclick="openCardModal('${c.id}')">Edit</button>
+  <button class="card-btn" onclick="duplicateCard('${c.id}')">⧉ Dupe</button>
+  <button class="card-btn" onclick="openMoveModal('${c.id}')">Move →</button>
+  <button class="card-btn del" onclick="deleteCard('${c.id}')">Delete</button>
+</div>`;
+
+  div.addEventListener('dblclick',()=>{
+    // If stacked, double-click opens the stack instead of editing
+    if((c.children||[]).length > 0 && drillStack.length === 0) {
+      drillInto(c.id);
+    } else {
+      openCardModal(c.id);
+    }
+  });
+  div.addEventListener('dragstart',e=>{
+    dragSrcId=c.id;
+    dragSrcIsStack = (c.children||[]).length > 0 && drillStack.length === 0;
+    setTimeout(()=>div.classList.add('dragging'),0);
+    e.dataTransfer.effectAllowed='move';
+  });
+  div.addEventListener('dragend',()=>{div.classList.remove('dragging');clearDropClasses();removeDropGap();dragSrcIsStack=false;});
+
+  div.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const rect = div.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const w = rect.width;
+    const zone = x / w;
+    const targetIsStack = (c.children||[]).length > 0 && drillStack.length === 0;
+
+    // Allow stacking onto any card — only block if SOURCE is a stack
+    if(zone > 0.25 && zone < 0.75 && !dragSrcIsStack) {
+      // Center zone = stack — only update if not already showing stack
+      if(!div.classList.contains('drop-stack')) {
+        clearDropClasses();
+        removeDropGap();
+        div.classList.add('drop-stack');
+      }
+    } else {
+      // Left/right zone = insert gap
+      if(div.classList.contains('drop-stack')) {
+        div.classList.remove('drop-stack');
+      }
+      const insertBefore = zone <= 0.5;
+      const existingGap = document.getElementById('active-drop-gap');
+      const existingPos = existingGap ? existingGap.dataset.position : null;
+      const existingTarget = existingGap ? existingGap.dataset.targetId : null;
+      // Only rebuild gap if position changed
+      if(!existingGap || existingPos !== (insertBefore?'before':'after') || existingTarget !== c.id) {
+        clearDropClasses();
+        removeDropGap();
+        const parent = div.closest('.board,.card-children-inline');
+        if(parent) {
+          const gap = document.createElement('div');
+          gap.className = 'drop-gap';
+          gap.id = 'active-drop-gap';
+          gap.dataset.targetId = c.id;
+          gap.dataset.position = insertBefore ? 'before' : 'after';
+          const anchor = div.closest('.card-stack-wrap') || div;
+          if(insertBefore) anchor.parentNode.insertBefore(gap, anchor);
+          else {
+            const next = anchor.nextSibling;
+            if(next) anchor.parentNode.insertBefore(gap, next);
+            else anchor.parentNode.appendChild(gap);
+          }
+        }
+      }
+    }
+  });
+
+  div.addEventListener('dragleave', e=>{
+    if(!e.relatedTarget || !e.relatedTarget.closest('.board,.card-children-inline')) {
+      clearDropClasses();
+    }
+  });
+
+  div.addEventListener('drop',e=>{
+    e.preventDefault();
+    const wasStack = div.classList.contains('drop-stack');
+    clearDropClasses();
+    const gap = document.getElementById('active-drop-gap');
+    const targetId = gap ? gap.dataset.targetId : c.id;
+    const position = gap ? gap.dataset.position : 'after';
+    removeDropGap();
+    if(!dragSrcId||dragSrcId===c.id) return;
+    const proj=activeProject(); if(!proj) return;
+
+    // STACK: drop onto center — block if source is a stack
+    if(wasStack && drillStack.length === 0) {
+      if(dragSrcIsStack) { showToast("Can't stack a group inside another card"); return; }
+      const srcIdx = proj.cards.findIndex(x=>x.id===dragSrcId);
+      if(srcIdx !== -1) {
+        const dstCard = c;
+        pushUndo();
+        const wasNewStack = (dstCard.children||[]).length === 0; // true if this is the first child
+        const [moved] = proj.cards.splice(srcIdx, 1);
+        if(!dstCard.children) dstCard.children = [];
+        dstCard.children.push(moved);
+        // Give the stack a chapterTitle if it doesn't have one
+        if(!dstCard.chapterTitle) dstCard.chapterTitle = dstCard.title;
+        // Apply same chapterTitle to child
+        moved.chapterTitle = dstCard.chapterTitle;
+        document.getElementById('sort-select').value='manual';
+        saveState(); renderBoard();
+        // Only prompt to name the chapter when creating a brand new stack
+        if(wasNewStack) {
+          setTimeout(()=>openChapterTitlePrompt(dstCard.id), 300);
+        } else {
+          showToast('Card added to stack');
+        }
+      }
+      return;
+    }
+
+    // REORDER — if dragging a stack, move parent + children as a unit
+    pushUndo();
+    if (drillStack.length > 0) {
+      const flat = currentCards();
+      const si=flat.findIndex(x=>x.id===dragSrcId);
+      const di=flat.findIndex(x=>x.id===targetId);
+      if(si===-1||di===-1) return;
+      const [moved]=flat.splice(si,1);
+      const newDi=flat.findIndex(x=>x.id===targetId);
+      flat.splice(position==='after'?newDi+1:newDi,0,moved);
+      flat.forEach((x,i)=>x.order=i);
+      commitFlatOrder(flat);
+    } else {
+      const srcCard = findCardAnywhere(proj.cards, dragSrcId);
+      const dstCard = c;
+      if(!isCategorized(srcCard) && isCategorized(dstCard)){showDragWarning(dragSrcId);return;}
+      const cc = proj.cards;
+      const si=cc.findIndex(x=>x.id===dragSrcId);
+      const di=cc.findIndex(x=>x.id===targetId);
+      if(si===-1||di===-1) return;
+      // Move the card (with all its children intact) as one unit
+      const [moved]=cc.splice(si,1);
+      const newDi=cc.findIndex(x=>x.id===targetId);
+      cc.splice(position==='after'?newDi+1:newDi,0,moved);
+      cc.forEach((x,i)=>x.order=i);
+
+      // If dragging a stack, check if act changed vs neighbours
+      if(dragSrcIsStack) {
+        const srcAct = splitActChapter(moved.chapter||'').act;
+        // Look at surrounding cards to detect destination act
+        const movedIdx = cc.findIndex(x=>x.id===moved.id);
+        const neighbour = cc[movedIdx+1] || cc[movedIdx-1];
+        const destAct = neighbour ? splitActChapter(neighbour.chapter||'').act : null;
+        if(destAct && destAct !== srcAct) {
+          saveState(); renderBoard();
+          setTimeout(()=>openRelabelActModal(moved.id, srcAct, destAct), 200);
+          return;
+        }
+      }
+    }
+    document.getElementById('sort-select').value='manual';
+    saveState(); renderBoard();
+  });
+
+  // If this card has stacked children, wrap it with shadow layers
+  if(childCount > 0 && drillStack.length === 0) {
+    div.classList.add('stacked-top');
+    div.title = 'Drag to move entire stack';
+    const wrap = document.createElement('div');
+    wrap.className = 'card-stack-wrap';
+    wrap.style.cursor = 'grab';
+    if(childCount >= 2) {
+      const s2 = document.createElement('div');
+      s2.className = 'card-stack-shadow card-stack-shadow-2';
+      s2.style.background = (COLORS[c.color]||'#ccc');
+      s2.style.opacity = '0.5';
+      wrap.appendChild(s2);
+    }
+    const s1 = document.createElement('div');
+    s1.className = 'card-stack-shadow card-stack-shadow-1';
+    s1.style.background = (COLORS[c.color]||'#ccc');
+    s1.style.opacity = '0.7';
+    wrap.appendChild(s1);
+    wrap.appendChild(div);
+    // No separate count badge — chapter title badge on card handles it
+    return wrap;
+  }
+
+  return div;
+}
+
+/* =======================================
+   BEATS VIEW
+======================================= */
+function renderBeatsView() {
+  const proj = activeProject(); if (!proj) return;
+  const container = document.getElementById('view-beats');
+  container.innerHTML = '';
+
+  // Get all categorized chapters in board order
+  const chNumMap = buildChapterNumberMap(proj);
+  const chapters = []; // [{ch, cards, num, title}]
+  const seen = [];
+  proj.cards.forEach(c => {
+    if(!isCategorized(c)) return;
+    if(!seen.includes(c.chapter)) {
+      seen.push(c.chapter);
+      const num = chNumMap[c.chapter] ? chNumMap[c.chapter].chNum : seen.length;
+      const chTitle = c.chapterTitle || stripChPrefix(c.title||'');
+      const allCards = [c, ...(c.children||[])];
+      chapters.push({ch: c.chapter, cards: allCards, num, title: chTitle, parentId: c.id});
+    }
+  });
+
+  if(chapters.length === 0) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-family:\'Courier New\',monospace;font-size:0.8rem;">No chapters yet. Add cards with an Act on the Board first.</div>';
+    return;
+  }
+
+  // Determine current chapter from drillStack or default to first
+  let currentCh = chapters[0];
+  if(drillStack.length > 0) {
+    const parentId = drillStack[drillStack.length-1].cardId;
+    const found = chapters.find(c => c.parentId === parentId);
+    if(found) currentCh = found;
+  } else {
+    // Auto-drill into first chapter
+    const firstCard = findCardAnywhere(proj.cards, chapters[0].parentId);
+    if(firstCard) {
+      drillStack = [{cardId: firstCard.id, title: firstCard.title}];
+      renderBreadcrumb();
+      currentCh = chapters[0];
+    }
+  }
+
+  // ── GO TO navigator bar
+  const navBar = document.createElement('div');
+  navBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 20px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;';
+
+  const goLabel = document.createElement('span');
+  goLabel.style.cssText = 'font-family:"Courier New",monospace;font-size:0.65rem;color:var(--muted);flex-shrink:0;text-transform:uppercase;letter-spacing:0.08em;';
+  goLabel.textContent = 'GO TO:';
+  navBar.appendChild(goLabel);
+
+  // Chapter number dropdown
+  const numSel = document.createElement('select');
+  numSel.style.cssText = 'background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:"Courier New",monospace;font-size:0.72rem;padding:4px 8px;outline:none;cursor:pointer;min-width:80px;';
+  chapters.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.parentId;
+    opt.textContent = 'CH ' + c.num;
+    opt.selected = c.parentId === currentCh.parentId;
+    numSel.appendChild(opt);
+  });
+
+  // Chapter name display (auto-updates with dropdown)
+  const nameDisplay = document.createElement('span');
+  nameDisplay.style.cssText = 'font-family:Georgia,serif;font-size:0.9rem;color:var(--accent);flex:1;';
+  nameDisplay.textContent = '— ' + currentCh.title;
+
+  // Left/right arrows
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'btn ghost';
+  prevBtn.style.cssText = 'padding:4px 10px;font-size:0.8rem;flex-shrink:0;';
+  prevBtn.textContent = '←';
+  prevBtn.title = 'Previous chapter';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn ghost';
+  nextBtn.style.cssText = 'padding:4px 10px;font-size:0.8rem;flex-shrink:0;';
+  nextBtn.textContent = '→';
+  nextBtn.title = 'Next chapter';
+
+  function goToChapter(parentId) {
+    const found = chapters.find(c => c.parentId === parentId);
+    if(!found) return;
+    const card = findCardAnywhere(proj.cards, parentId);
+    if(!card) return;
+    drillStack = [{cardId: parentId, title: card.title}];
+    saveState();
+    renderBreadcrumb();
+    renderBeatsView();
+  }
+
+  numSel.onchange = () => {
+    nameDisplay.textContent = '— ' + (chapters.find(c=>c.parentId===numSel.value)?.title||'');
+    goToChapter(numSel.value);
+  };
+
+  const curIdx = chapters.findIndex(c => c.parentId === currentCh.parentId);
+  prevBtn.onclick = () => { if(curIdx > 0) goToChapter(chapters[curIdx-1].parentId); };
+  nextBtn.onclick = () => { if(curIdx < chapters.length-1) goToChapter(chapters[curIdx+1].parentId); };
+  prevBtn.disabled = curIdx === 0;
+  nextBtn.disabled = curIdx === chapters.length-1;
+  if(prevBtn.disabled) prevBtn.style.opacity='0.3';
+  if(nextBtn.disabled) nextBtn.style.opacity='0.3';
+
+  navBar.appendChild(prevBtn);
+  navBar.appendChild(numSel);
+  navBar.appendChild(nameDisplay);
+  navBar.appendChild(nextBtn);
+  container.appendChild(navBar);
+
+  // ── Beat cards for current chapter
+  const boardWrap = document.createElement('div');
+  boardWrap.style.cssText = 'flex:1;overflow-y:auto;';
+  const grid = document.createElement('div');
+  grid.className = 'board';
+  grid.style.flex = '1';
+
+  currentCh.cards.forEach(c => {
+    const el = makeCard(c, '');
+    grid.appendChild(el);
+  });
+
+  // Add card button
+  const addBtn = document.createElement('div');
+  addBtn.className = 'card-add';
+  addBtn.innerHTML = '<span class="plus">+</span><span>Add card</span>';
+  addBtn.onclick = () => openCardModal();
+  grid.appendChild(addBtn);
+
+  boardWrap.appendChild(grid);
+  container.appendChild(boardWrap);
+}
+
+
+/* =======================================
+   CHILD CARD (inline on main board)
+======================================= */
+function makeChildCard(c, parent) {
+  // Use the same full-size card as the main board
+  return makeCard(c, '');
+}
+
+/* =======================================
+   UNCATEGORIZED VIEW
+======================================= */
+function renderUncategorized() {
+  const proj = activeProject(); if (!proj) return;
+  const container = document.getElementById('view-uncategorized');
+  container.innerHTML = '';
+
+  // Cards missing EITHER act OR chapter are uncategorized
+  const allCards = getAllCards(proj.cards);
+  const uncat = allCards.filter(c => !isCategorized(c));
+
+  // Sort: act-only first, then chapter-only, then neither
+  uncat.sort((a, b) => {
+    const {act:aAct, chapter:aChap} = splitActChapter(a.chapter||'');
+    const {act:bAct, chapter:bChap} = splitActChapter(b.chapter||'');
+    const aScore = (aAct?2:0) + (aChap?1:0); // act+chap=3(shouldn't be here), act-only=2, chap-only=1, neither=0
+    const bScore = (bAct?2:0) + (bChap?1:0);
+    if(aScore !== bScore) return bScore - aScore; // higher score first
+    // Within same group, sort alphabetically by whatever they have
+    return (a.chapter||'').localeCompare(b.chapter||'') || a.order - b.order;
+  });
+
+  // Update badge
+  updateUncatBadge(proj);
+
+  const inner = document.createElement('div');
+  inner.className = 'board';
+  inner.style.flex = '1';
+
+  if(uncat.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = '<div class="big">All ideas have a home.</div>Cards without an Act or Chapter will appear here.';
+    inner.appendChild(empty);
+  } else {
+    uncat.forEach(c => {
+      const el = makeCard(c, searchQuery.toLowerCase().trim());
+      inner.appendChild(el);
+    });
+  }
+
+  // Add card button — new cards here start blank (no chapter)
+  const addBtn = document.createElement('div');
+  addBtn.className = 'card-add';
+  addBtn.innerHTML = '<span class="plus">+</span><span>Add card</span>';
+  addBtn.onclick = openCardModal;
+  inner.appendChild(addBtn);
+  container.appendChild(inner);
+}
+
+function updateUncatBadge(proj) {
+  if (!proj) proj = activeProject();
+  if (!proj) return;
+  const allCards = getAllCards(proj.cards);
+  const count = allCards.filter(c => !isCategorized(c)).length;
+  const badge = document.getElementById('uncat-count-badge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* =======================================
+   ACTS VIEW
+======================================= */
+function renderChaptersView() {
+  const proj = activeProject(); if (!proj) return;
+  if (!proj.chapterTitles) proj.chapterTitles = {};
+  const container = document.getElementById('view-chapters');
+  container.innerHTML = '';
+
+  const sorted = [...proj.cards].sort((a,b) => a.order - b.order);
+  const allCards = [];
+  sorted.forEach(c=>{ allCards.push(c); (c.children||[]).forEach(ch=>allCards.push(ch)); });
+  const categorized = allCards.filter(c=>isCategorized(c));
+
+  const seenCh = [];
+  const groups = [];
+  categorized.forEach(c=>{
+    if(!seenCh.includes(c.chapter)){ seenCh.push(c.chapter); groups.push({ch:c.chapter,cards:[]}); }
+    groups.find(g=>g.ch===c.chapter).cards.push(c);
+  });
+
+  if(groups.length===0){
+    const empty=document.createElement('div');
+    empty.style.cssText='padding:40px;text-align:center;color:var(--muted);font-family:"Courier New",monospace;font-size:0.8rem;';
+    empty.innerHTML='No chapters yet. Add Act to your cards on the Board.';
+    container.appendChild(empty);
+    return;
+  }
+
+  const inner = document.createElement('div');
+  inner.style.cssText = 'padding:20px;display:flex;flex-direction:column;gap:24px;';
+  const chNumMap = buildChapterNumberMap(proj);
+
+  groups.forEach(({ch, cards})=>{
+    const {act} = splitActChapter(ch);
+    const autoNum = chNumMap[ch] ? chNumMap[ch].chNum : null;
+    // Chapter title: use chapterTitle of first card, or stored working title
+    const firstCard = cards[0];
+    const chapterTitle = firstCard ? (firstCard.chapterTitle || stripChPrefix(firstCard.title||'')) : ch;
+    const section = document.createElement('div');
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:12px;';
+
+    const titleEl = document.createElement('span');
+    titleEl.style.cssText = 'font-family:Georgia,serif;font-size:1.15rem;color:var(--accent);flex:1;font-weight:normal;';
+    titleEl.textContent = (act ? act+' › ' : '') + (autoNum ? 'CH '+autoNum+' — ' : '') + stripChPrefix(chapterTitle||'');
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn ghost';
+    editBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
+    editBtn.textContent = '✎ Edit Chapter';
+    editBtn.onclick = () => {
+      const firstCard = cards[0];
+      if(firstCard) openChapterEditModal(firstCard);
+    };
+
+    const addCardBtn = document.createElement('button');
+    addCardBtn.className = 'btn ghost';
+    addCardBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
+    addCardBtn.textContent = '+ Add Card';
+    addCardBtn.onclick = () => openCardModalForChapter(ch, cards, chapterTitle);
+
+    header.appendChild(titleEl);
+    header.appendChild(editBtn);
+    header.appendChild(addCardBtn);
+    section.appendChild(header);
+
+    // ── Cards grid — use makeCard for drag support, hide badge (header covers it)
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;';
+    cards.forEach(c=>{
+      const el = makeCard(c, '');
+      grid.appendChild(el);
+    });
+    section.appendChild(grid);
+    inner.appendChild(section);
+  });
+
+  container.appendChild(inner);
+}
+
+function openCardModalForChapter(ch, chapterCards, chapterTitle) {
+  const proj = activeProject(); if (!proj) return;
+  // Store the chapter info so saveCard can use it
+  openCardModal();
+  setTimeout(() => {
+    const {act} = splitActChapter(ch);
+    setActField(act);
+    // Pre-fill title hint
+    document.getElementById('card-title-input').value = '';
+    document.getElementById('card-title-input').placeholder = 'Beat title…';
+    // Store chapter context for saveCard
+    document.getElementById('card-chapter-input').value = ch;
+    // Inherit characters and color from first card
+    if(chapterCards.length > 0) {
+      selectedCharIds = [...(chapterCards[0].characters||[])];
+      renderSelectedChars();
+      setCardColor(chapterCards[0].color||'white');
+    }
+    setTimeout(()=>{ document.getElementById('card-title-input').focus(); }, 10);
+  }, 60);
+}
+
+function renderActs() {
+  const proj=activeProject(); if(!proj) return;
+  const row=document.getElementById('acts-row'); row.innerHTML='';
+
+  // Group by chapter/act - show full label as column header
+  const groups={};
+  const order=[];
+  // Include all cards (root + children) — sort by board order
+  const allActCards = getAllCards(proj.cards);
+  // Sort by board order only — board position IS the chapter order
+  allActCards.sort((a,b) => {
+    const aCat=isCategorized(a), bCat=isCategorized(b);
+    if(aCat!==bCat) return aCat?-1:1;
+    return a.order - b.order;
+  });
+  allActCards.forEach(c=>{
+    const key = isCategorized(c) ? c.chapter : '~~ideas~~';
+    if(!groups[key]){groups[key]=[];order.push(key);}
+    groups[key].push(c);
+  });
+
+  // Keep columns in the order they first appear on the board (ideas last)
+  order.sort((a,b)=>{
+    if(a==='~~ideas~~') return 1;
+    if(b==='~~ideas~~') return -1;
+    return 0; // preserve board order
+  });
+  if(!order.length){order.push('~~ideas~~');groups['~~ideas~~']=[];}
+
+  const chNumMap = buildChapterNumberMap(proj);
+
+  order.forEach(act=>{
+    const col=document.createElement('div'); col.className='act-col';
+    const cards=groups[act]||[];
+    // Build column title with auto chapter number
+    let colTitle;
+    if(act==='~~ideas~~') {
+      colTitle = 'Ideas';
+    } else {
+      const {act:actPart, chapter:chapPart} = splitActChapter(act);
+      const autoNum = chNumMap[act] ? chNumMap[act].chNum : null;
+      const parentTitle = cards[0] ? stripChPrefix(cards[0].title||'') : '';
+      if(actPart && autoNum) {
+        colTitle = actPart + ' › CH ' + autoNum + (parentTitle ? ' — ' + parentTitle : '');
+      } else {
+        colTitle = act;
+      }
+    }
+    col.innerHTML=`<div class="act-header"><div class="act-header-title">${esc(colTitle)}</div><div class="act-header-count">${cards.length} card${cards.length!==1?'s':''}</div></div>`;
+    cards.forEach(c=>{
+      const bg=COLORS[c.color]||'#ccc';
+      const actCardFlags=(c.flags&&c.flags.length)?c.flags:(c.flag&&c.flag!=='none'?[c.flag]:[]);
+      const flagHtml=actCardFlags.length?`<div style="position:absolute;top:5px;right:5px;display:flex;gap:2px;">${actCardFlags.map(f=>`<div style="width:8px;height:8px;border-radius:50%;background:${FLAG_COLORS[f]||'#888'}"></div>`).join('')}</div>`:'';
+      const card=document.createElement('div'); card.className='act-card'; card.style.background=bg; card.style.position='relative';
+      card.innerHTML=`${flagHtml}<div class="card-title">${esc(c.title)}</div><div class="card-body">${(c.body||'').replace(/<[^>]+>/g,' ')}</div>`;
+      card.onclick=()=>openCardModal(c.id);
+      col.appendChild(card);
+    });
+    const addDiv=document.createElement('div'); addDiv.className='act-add';
+    addDiv.textContent='+ Add card to '+(act==='~~ideas~~'?'Ideas':act);
+    addDiv.onclick=()=>{openCardModal();if(act!=='~~ideas~~'){setTimeout(()=>{const {act:a}=splitActChapter(act);setActField(a);},60);}};
+    col.appendChild(addDiv);
+    row.appendChild(col);
+  });
+}
+
+/* =======================================
+   SEARCH
+======================================= */
+function handleSearch() {
+  searchQuery=document.getElementById('search-input').value;
+  if(currentView==='board') renderBoard();
+}
+function clearSearch() {
+  document.getElementById('search-input').value=''; searchQuery='';
+  if(currentView==='board') renderBoard();
+}
+
+/* =======================================
+   FLAGS
+======================================= */
+const FLAG_NOTE_IDS={}; // legacy - replaced by selectedFlagNotes object
+const FLAG_DOT_COLORS={none:'#555',red:'#e04040',yellow:'#d0c040',blue:'#4080e0',green:'#40c060',gold:'#f0c060'};
+
+function selectFlagFromDropdown() {
+  // flag-dropdown removed - now using pill picker
+  renderFlagPicker([], '');
+}
+
+function renderFlagPicker(activeFlags, note, flagNotes) {
+  selectedFlags = [...activeFlags];
+  selectedFlag = activeFlags.length > 0 ? activeFlags[0] : 'none';
+  if (flagNotes) selectedFlagNotes = {...flagNotes};
+  // If only single note passed (legacy), assign to first flag
+  if (note && activeFlags.length === 1 && !selectedFlagNotes[activeFlags[0]]) {
+    selectedFlagNotes[activeFlags[0]] = note;
+  }
+
+  const picker = document.getElementById('flag-picker');
+  if (!picker) return;
+  const labels = getFlagLabels();
+  picker.innerHTML = '';
+
+  FLAG_KEYS.forEach(key => {
+    const btn = document.createElement('button');
+    const isActive = selectedFlags.includes(key);
+    btn.type = 'button';
+    btn.style.cssText = `display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:14px;cursor:pointer;font-family:'Courier New', Courier, monospace;font-size:0.68rem;transition:all 0.12s;border:1.5px solid ${isActive ? FLAG_COLORS[key] : 'var(--border)'};background:${isActive ? FLAG_COLORS[key]+'22' : 'transparent'};color:${isActive ? FLAG_COLORS[key] : 'var(--muted)'};`;
+    btn.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${FLAG_COLORS[key]};flex-shrink:0;"></span>${esc(labels[key]||key)}`;
+    btn.onclick = () => {
+      // Save current note values before re-render
+      saveFlagNoteInputs();
+      if (selectedFlags.includes(key)) {
+        selectedFlags = selectedFlags.filter(f => f !== key);
+        delete selectedFlagNotes[key];
+      } else {
+        selectedFlags.push(key);
+      }
+      selectedFlag = selectedFlags.length > 0 ? selectedFlags[0] : 'none';
+      renderFlagPicker(selectedFlags, '', selectedFlagNotes);
+    };
+    picker.appendChild(btn);
+  });
+
+  // Per-flag note inputs
+  const notesArea = document.getElementById('flag-notes-area');
+  if (notesArea) {
+    notesArea.innerHTML = '';
+    selectedFlags.forEach(key => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
+      wrap.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${FLAG_COLORS[key]};flex-shrink:0;border:1.5px solid rgba(0,0,0,0.2)"></span>`;
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.dataset.flagkey = key;
+      inp.className = 'flag-note-inp';
+      inp.placeholder = `Note for ${labels[key]||key}…`;
+      inp.value = selectedFlagNotes[key] || '';
+      inp.style.cssText = 'flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system,sans-serif;font-size:0.82rem;padding:6px 10px;outline:none;transition:border-color 0.15s;';
+      inp.onfocus = () => inp.style.borderColor = 'var(--accent)';
+      inp.onblur = () => { inp.style.borderColor = 'var(--border)'; saveFlagNoteInputs(); };
+      wrap.appendChild(inp);
+      notesArea.appendChild(wrap);
+    });
+  }
+}
+
+function saveFlagNoteInputs() {
+  document.querySelectorAll('.flag-note-inp').forEach(inp => {
+    selectedFlagNotes[inp.dataset.flagkey] = inp.value;
+  });
+}
+
+function selectFlag(flag) { renderFlagPicker([flag], ''); }
+
+function setFlag(flag, note) {
+  const flags = (flag && flag !== 'none') ? [flag] : [];
+  selectedFlagNotes = note ? {[flag]: note} : {};
+  renderFlagPicker(flags, note, selectedFlagNotes);
+}
+
+function getFlagNote() {
+  saveFlagNoteInputs();
+  // Return combined notes as "Label: note; Label2: note2"
+  const labels = getFlagLabels();
+  const parts = selectedFlags.filter(f=>selectedFlagNotes[f]).map(f=>`${labels[f]||f}: ${selectedFlagNotes[f]}`);
+  return parts.join(' | ');
+}
+
+function getFlagNotesObj() {
+  saveFlagNoteInputs();
+  return {...selectedFlagNotes};
+}
+
+function updateFlagDropdownLabels() {
+  // Re-render picker with current flags to show updated labels
+  if (document.getElementById('flag-picker')) renderFlagPicker(selectedFlags, document.getElementById('flag-note-input-single')?.value||'');
+}
+function setFlagFilter(flag) {
+  flagFilter=flag;
+  document.querySelectorAll('.flag-filter-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.flagfilter===flag));
+  if(currentView==='uncategorized') renderUncategorized(); else renderBoard();
+}
+
+/* =======================================
+   DRILL-DOWN (nested cards)
+======================================= */
+function drillInto(cardId) {
+  const proj = activeProject(); if (!proj) return;
+  const card = findCardAnywhere(proj.cards, cardId); if (!card) return;
+  if (!card.children) card.children = [];
+  drillStack.push({cardId, title: card.title});
+  saveState();
+  // Switch to Beats tab and highlight it
+  currentView = 'beats';
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t.dataset.view==='beats'));
+  document.getElementById('view-board').style.display = 'none';
+  document.getElementById('view-beats').style.display = 'flex';
+  document.getElementById('toolbar-bar').style.display = 'none';
+  renderBreadcrumb();
+  renderBeatsView();
+}
+
+function drillUp(depth) {
+  if (drillStack.length > 0) drillStack.pop();
+  saveState();
+  renderBreadcrumb();
+  if(drillStack.length === 0) {
+    // Return to board
+    currentView = 'board';
+    document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t.dataset.view==='board'));
+    document.getElementById('view-beats').style.display = 'none';
+    document.getElementById('view-board').style.display = 'flex';
+    document.getElementById('toolbar-bar').style.display = 'flex';
+    renderBoard();
+  } else {
+    renderBeatsView();
+  }
+}
+
+function currentCards() {
+  const proj = activeProject(); if (!proj) return [];
+  if (drillStack.length === 0) return proj.cards;
+  // Drilled in: return flat list of [parent, ...children]
+  const parent = getDrilledParent();
+  if (!parent) return [];
+  if (!parent.children) parent.children = [];
+  return [parent, ...parent.children];
+}
+
+function currentChildrenArray() {
+  const proj = activeProject(); if (!proj) return proj ? proj.cards : [];
+  if (drillStack.length === 0) return proj.cards;
+  const parent = getDrilledParent();
+  if (!parent) return [];
+  if (!parent.children) parent.children = [];
+  return parent.children;
+}
+
+function getDrilledParent() {
+  const proj = activeProject(); if (!proj) return null;
+  let cards = proj.cards;
+  let parent = null;
+  for (const frame of drillStack) {
+    parent = findCardAnywhere(cards, frame.cardId);
+    if (!parent) return null;
+    if (!parent.children) parent.children = [];
+    cards = parent.children;
+  }
+  return parent;
+}
+
+function commitFlatOrder(flatList) {
+  // flatList is [newParent, ...newChildren] after drag reorder.
+  // We restructure the data so flatList[0] is the root card
+  // and flatList[1..] are its children. No circular refs.
+  const proj = activeProject(); if (!proj) return;
+  if (drillStack.length === 0) return;
+
+  const oldParent = getDrilledParent();
+  if (!oldParent) return;
+
+  const newParent = flatList[0];
+  // Children are everything except the new parent, with children arrays cleared
+  // to prevent circular refs (they keep their own nested children separately)
+  const newChildren = flatList.slice(1).map(c => {
+    // Strip children from cards that are becoming children
+    // (their own sub-beats would need separate handling)
+    return c;
+  });
+
+  // Clear children of all cards in the flat list first to avoid circular refs
+  flatList.forEach(c => { c.children = c.children || []; });
+
+  const rootIdx = proj.cards.findIndex(c => c.id === oldParent.id);
+
+  if (newParent.id === oldParent.id) {
+    // Same parent, just reorder children
+    oldParent.children = newChildren;
+    newChildren.forEach((c,i) => c.order = i);
+  } else {
+    // New card promoted to parent position
+    // newParent should not appear in its own children
+    const safeChildren = newChildren.filter(c => c.id !== newParent.id);
+    // Remove newParent from oldParent's children
+    const wasInChildren = oldParent.children.findIndex(c => c.id === newParent.id);
+    if (wasInChildren !== -1) oldParent.children.splice(wasInChildren, 1);
+
+    // newParent takes over at root level, gets all others as children
+    newParent.children = safeChildren;
+    safeChildren.forEach((c,i) => c.order = i);
+    newParent.order = oldParent.order;
+
+    // oldParent is now a child — clear its children to avoid nesting
+    oldParent.children = [];
+
+    if (rootIdx !== -1) {
+      proj.cards[rootIdx] = newParent;
+    }
+    // Update drillStack
+    drillStack[drillStack.length - 1] = {cardId: newParent.id, title: newParent.title};
+  }
+}
+
+function findCardAnywhere(cards, id) {
+  for (const c of cards) {
+    if (c.id === id) return c;
+    if (c.children) {
+      const found = findCardAnywhere(c.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function renderBreadcrumb() {
+  const proj = activeProject();
+  const bar = document.getElementById('breadcrumb');
+  if (!proj || drillStack.length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  bar.style.flexDirection = 'row';
+  bar.style.alignItems = 'center';
+  bar.style.gap = '12px';
+  bar.style.padding = '10px 20px';
+  bar.innerHTML = '';
+
+  // Back button (small, left)
+  const back = document.createElement('button');
+  back.className = 'breadcrumb-back';
+  back.textContent = '←';
+  back.title = 'Back to Board';
+  back.onclick = () => drillUp(0);
+  bar.appendChild(back);
+
+  // Chapter Title — gold, large, flush left
+  const frame = drillStack[drillStack.length - 1];
+  const parentCard = frame ? findCardAnywhere(proj.cards, frame.cardId) : null;
+  if(parentCard) {
+    const chNumMap = buildChapterNumberMap(proj);
+    const autoNum = chNumMap[parentCard.chapter] ? chNumMap[parentCard.chapter].chNum : null;
+    const {act} = splitActChapter(parentCard.chapter||'');
+    const chTitle = parentCard.chapterTitle || stripChPrefix(parentCard.title||'');
+
+    const titleEl = document.createElement('span');
+    titleEl.style.cssText = 'font-family:Georgia,serif;font-size:1.15rem;color:var(--accent);flex:1;font-weight:normal;';
+    titleEl.textContent = (act ? act+' › ' : '') + (autoNum ? 'CH '+autoNum+' — ' : '') + chTitle;
+    bar.appendChild(titleEl);
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn ghost';
+    editBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
+    editBtn.textContent = '✎ Edit Chapter';
+    editBtn.onclick = () => openChapterEditModal(parentCard);
+    bar.appendChild(editBtn);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn ghost';
+    addBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
+    addBtn.textContent = '+ Add Card';
+    addBtn.onclick = () => openCardModal();
+    bar.appendChild(addBtn);
+  }
+}
+
+/* =======================================
+   ACT & CHAPTER HELPERS
+======================================= */
+// Cards store chapter as "Act 1 › Chapter 3" or just "Chapter 3" or just "Act 1"
+function buildChapter(act, chap) {
+  if (act && chap) return act + ' › ' + chap;
+  if (act) return act;
+  return chap;
+}
+function splitActChapter(combined) {
+  if (!combined) return {act:'', chapter:''};
+  if (combined.includes(' › ')) {
+    const [act, ...rest] = combined.split(' › ');
+    return {act: act.trim(), chapter: rest.join(' › ').trim()};
+  }
+  // Guess: if it looks like an act name, put it in act
+  const actNames = ['Act 1','Act 2','Act 3','Prologue','Epilogue'];
+  if (actNames.includes(combined.trim())) return {act: combined.trim(), chapter: ''};
+  return {act: '', chapter: combined};
+}
+
+function getActValue() {
+  const sel = document.getElementById('card-act-input');
+  if (sel.value === 'custom') return document.getElementById('card-act-custom').value.trim();
+  return sel.value;
+}
+
+function setActField(act) {
+  const sel = document.getElementById('card-act-input');
+  const customInput = document.getElementById('card-act-custom');
+  const stdOpts = ['','Act 1','Act 2','Act 3','Prologue','Epilogue'];
+  if (stdOpts.includes(act)) {
+    sel.value = act;
+    customInput.style.display = 'none';
+  } else if (act) {
+    sel.value = 'custom';
+    customInput.style.display = 'block';
+    customInput.value = act;
+  } else {
+    sel.value = '';
+    customInput.style.display = 'none';
+  }
+}
+
+// Show/hide custom act input
+document.getElementById('card-act-input').addEventListener('change', function() {
+  const customInput = document.getElementById('card-act-custom');
+  if (this.value === 'custom') {
+    customInput.style.display = 'block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+  }
+});
+
+// Chapter typeahead - suggests chapters already used in this project
+function chapterTypeaheadInput() { /* chapter field removed */ }
+function chapterTypeaheadKey(e) { /* chapter field removed */ }
+
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.chapter-typeahead');
+  if (wrap && !wrap.contains(e.target)) {
+    const dd = document.getElementById('chapter-dropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
+/* =======================================
+   FILTER / SORT
+======================================= */
+document.querySelectorAll('.color-dot').forEach(dot=>{
+  dot.addEventListener('click',()=>{
+    document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+    dot.classList.add('active'); filterColor=dot.dataset.filter; renderBoard();
+  });
+});
+document.getElementById('sort-select').addEventListener('change', function() {
+  if (this.value === 'character') {
+    // Reset to previous sort and open character panel
+    this.value = 'manual';
+    const panel = document.getElementById('char-panel');
+    if (panel && panel.classList.contains('hidden')) toggleCharPanel();
+    showToast('Pick a character to filter cards');
+  } else {
+    renderBoard();
+  }
+});
+
+/* =======================================
+   RICH TEXT
+======================================= */
+function fmt(cmd){document.getElementById('card-body-input').focus();document.execCommand(cmd,false,null);}
+
+function adjustModalFontSize(delta) {
+  currentCardFontSize = Math.min(24, Math.max(8, currentCardFontSize + delta));
+  applyFontSize(currentCardFontSize);
+  // Sync slider in settings if open
+  const slider = document.getElementById('font-size-slider');
+  if (slider) slider.value = currentCardFontSize;
+  renderFontPicker();
+}
+
+function updateModalFontSizeDisplay() {
+  const el = document.getElementById('modal-font-size-display');
+  if (el) el.textContent = currentCardFontSize + 'px';
+}
+function updateCardWordCount(){
+  const el=document.getElementById('card-body-input');
+  const wc=document.getElementById('card-word-count');
+  if(!el||!wc) return;
+  const text=(el.innerText||'').trim();
+  const words=text?text.split(/\s+/).length:0;
+  const chars=text.length;
+  wc.textContent=words+' word'+(words!==1?'s':'')+' · '+chars+' char'+(chars!==1?'s':'');
+}
+function clearFmt(){document.getElementById('card-body-input').focus();document.execCommand('removeFormat',false,null);}
+
+/* =======================================
+   EXPORT
+======================================= */
+function toggleExportMenu(){const m=document.getElementById('export-menu');m.style.display=m.style.display==='none'?'block':'none';}
+document.addEventListener('click',e=>{if(!document.getElementById('export-wrap').contains(e.target))document.getElementById('export-menu').style.display='none';});
+
+function exportTxt() {
+  const proj=activeProject(); if(!proj) return;
+  let text=proj.name+'\n'+'='.repeat(proj.name.length)+'\n\n';
+  if(proj.desc) text+=proj.desc+'\n\n';
+
+  // Use board order: categorized first by chapter, then uncategorized
+  const allCards = [];
+  proj.cards.forEach(c=>{ allCards.push(c); (c.children||[]).forEach(ch=>allCards.push(ch)); });
+  const categorized = allCards.filter(c=>isCategorized(c));
+  const uncategorized = allCards.filter(c=>!isCategorized(c));
+
+  categorized.sort((a,b)=>{
+    const {act:aA,chapter:aC}=splitActChapter(a.chapter||'');
+    const {act:bA,chapter:bC}=splitActChapter(b.chapter||'');
+    const chapNum = s => parseInt((s||'').match(/\d+/)?.[0]||'0');
+    const actNum = s => parseInt((s||'').match(/\d+/)?.[0]||'0');
+    if(actNum(aA)!==actNum(bA)) return actNum(aA)-actNum(bA);
+    if(chapNum(aC)!==chapNum(bC)) return chapNum(aC)-chapNum(bC);
+    return a.order-b.order;
+  });
+
+  let lastCh=null;
+  [...categorized,...uncategorized].forEach(c=>{
+    const ch=c.chapter||'Ideas';
+    if(ch!==lastCh){lastCh=ch;text+='\n'+ch+'\n'+'-'.repeat(ch.length)+'\n\n';}
+    const plain=(c.body||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').trim();
+    text+=(c.title||'(untitled)')+'\n';
+    if(plain) text+=plain+'\n';
+    text+='\n';
+  });
+  dlBlob(text,'text/plain;charset=utf-8', proj.name.replace(/\s+/g,'_')+'_outline.txt');
+}
+
+function exportHtml() {
+  const proj=activeProject(); if(!proj) return;
+  const CARD_BG={teal:'#b2e8e8',pink:'#f5b8df',green:'#b8ecc4',orange:'#f8d8a8',purple:'#d8c8f8',red:'#f5c0c0',yellow:'#f5ee98',blue:'#b8d4f8',salmon:'#ecc8b8',white:'#f4f4f6'};
+  const labels = getFlagLabels();
+
+  // Build flat ordered list matching board order (chapter sorted, beats under parents)
+  const allCards = [];
+  const sorted = [...proj.cards].sort((a,b) => {
+    const aCat=isCategorized(a),bCat=isCategorized(b);
+    if(aCat!==bCat) return aCat?-1:1;
+    return a.order - b.order; // board order is the truth
+  });
+  sorted.forEach(c=>{ allCards.push({...c,isChild:false}); (c.children||[]).forEach(ch=>allCards.push({...ch,isChild:true})); });
+
+  // Group by chapter
+  const chapterGroups=[];
+  const seen=[];
+  allCards.forEach(c=>{
+    const ch=c.chapter||'Ideas';
+    if(!seen.includes(ch)){seen.push(ch);chapterGroups.push({ch,cards:[]});}
+    chapterGroups.find(g=>g.ch===ch).cards.push(c);
+  });
+
+  let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${proj.name}</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 32px;color:#111;}
+h1{font-size:2rem;margin-bottom:6px;font-family:Georgia,serif;}
+.logline{color:#666;font-style:italic;margin-bottom:32px;font-size:0.95rem;}
+h2{font-size:1rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.08em;color:#555;border-bottom:2px solid #ddd;padding-bottom:5px;margin:32px 0 14px;}
+.card{border-radius:4px;padding:12px 14px;margin-bottom:10px;margin-left:0;}
+.card.child{margin-left:24px;border-left:3px solid rgba(0,0,0,0.1);}
+.card-title{font-weight:bold;font-size:0.9rem;margin-bottom:5px;color:rgba(0,0,0,0.85);}
+.card-body{font-size:0.85rem;color:rgba(0,0,0,0.75);line-height:1.55;}
+.card-chars{font-size:0.72rem;color:rgba(0,0,0,0.5);margin-top:6px;}
+.card-flags{font-size:0.7rem;color:rgba(0,0,0,0.5);margin-top:3px;font-style:italic;}
+.footer{margin-top:50px;font-size:0.7rem;color:#aaa;border-top:1px solid #eee;padding-top:12px;}
+</style></head><body>
+<h1>${proj.name}</h1>${proj.desc?'<div class="logline">'+proj.desc+'</div>':''}`;
+
+  const chNumMap = buildChapterNumberMap(proj);
+
+  chapterGroups.forEach(({ch,cards})=>{
+    const {act,chapter}=splitActChapter(ch);
+    const autoNum = chNumMap[ch] ? chNumMap[ch].chNum : null;
+    const parentTitle = cards[0] ? stripChPrefix(cards[0].title||'') : '';
+    const chLabel = autoNum ? 'CH '+autoNum+(parentTitle?' — '+parentTitle:'') : (chapter||ch);
+    const heading = act ? act+' › '+chLabel : chLabel;
+    html+=`<h2>${heading}</h2>`;
+    cards.forEach(c=>{
+      const bg=CARD_BG[c.color]||'#f0f0f0';
+      const charNames=(c.characters||[]).map(id=>{const ch2=(proj.characters||[]).find(x=>x.id===id);return ch2?ch2.name:null;}).filter(Boolean);
+      const cardFlags=(c.flags&&c.flags.length)?c.flags:(c.flag&&c.flag!=='none'?[c.flag]:[]);
+      const flagLabelsStr=cardFlags.map(f=>labels[f]||f).join(', ');
+      html+=`<div class="card${c.isChild?' child':''}" style="background:${bg}">`;
+      html+=`<div class="card-title">${c.title||'(untitled)'}</div>`;
+      if(c.body) html+=`<div class="card-body">${c.body}</div>`;
+      if(charNames.length) html+=`<div class="card-chars">Characters: ${charNames.join(', ')}</div>`;
+      if(flagLabelsStr) html+=`<div class="card-flags">Flags: ${flagLabelsStr}${c.flagNote?' — '+c.flagNote:''}</div>`;
+      html+='</div>';
+    });
+  });
+
+  html+=`<div class="footer">Exported from StoryDeck — ${new Date().toLocaleDateString()}</div></body></html>`;
+  dlBlob(html,'text/html;charset=utf-8', proj.name.replace(/\s+/g,'_')+'_outline.html');
+  showToast('Exported — open .html file in Word or Google Docs');
+}
+
+function printBoard() {
+  const proj=activeProject(); if(!proj) return;
+  document.getElementById('print-title').textContent=proj.name;
+  document.getElementById('print-title').style.display='block';
+  document.getElementById('print-subtitle').textContent=(proj.desc||'')+' - Printed '+new Date().toLocaleDateString();
+  document.getElementById('print-subtitle').style.display='block';
+  window.print();
+  document.getElementById('print-title').style.display='none';
+  document.getElementById('print-subtitle').style.display='none';
+}
+
+function dlData(dataStr, filename) {
+  try {
+    const a=document.createElement('a'); a.href=dataStr; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } catch(err) {
+    showToast('Download blocked - try from your desktop file');
+  }
+}
+
+function dlBlob(content, type, filename) {
+  const blob=new Blob([content],{type});
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const a=document.createElement('a');
+    a.href=e.target.result; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+  reader.readAsDataURL(blob);
+}
+
+/* =======================================
+   SAVE / LOAD
+======================================= */
+/* =========================================
+   AUTOSAVE SYSTEM
+   Uses File System Access API when available
+   (works on desktop, falls back in sandbox)
+========================================= */
+let fileHandle = null;          // The file the user picked
+let autosaveTimer = null;       // setInterval handle
+let autosaveMinutes = 3;
+let lastSaveTime = null;
+let unsavedChanges = false;
+
+// Mark unsaved whenever state changes - patched into the real saveState below
+
+function updateAutosaveUI(status) {
+  const dot = document.getElementById('autosave-dot');
+  const label = document.getElementById('autosave-label');
+  if (!dot || !label) return;
+  if (status === 'saved') {
+    dot.style.background = '#40c060';
+    const t = new Date(lastSaveTime);
+    label.textContent = 'Saved ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } else if (status === 'unsaved') {
+    dot.style.background = '#d0c040';
+    label.textContent = fileHandle ? 'Unsaved changes' : 'Not saved yet';
+  } else if (status === 'saving') {
+    dot.style.background = '#4080e0';
+    label.textContent = 'Saving...';
+  } else if (status === 'error') {
+    dot.style.background = '#e04040';
+    label.textContent = 'Save failed';
+  } else {
+    dot.style.background = 'var(--border)';
+    label.textContent = 'Autosave: not set up';
+  }
+}
+
+async function setupAutosave() {
+  // Check if File System Access API is available
+  if (!window.showSaveFilePicker) {
+    showToast('Autosave requires Chrome or Brave — open this file in one of those browsers');
+    return;
+  }
+  // Brave/Chrome may block this if not triggered by user gesture — this click IS a user gesture so it should work
+  try {
+    const d = new Date();
+    const projName = activeProject() ? activeProject().name.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') : 'storyboard';
+    const suggested = projName + '_' + d.toISOString().slice(0,10) + '.json';
+    fileHandle = await window.showSaveFilePicker({
+      suggestedName: suggested,
+      types: [{ description: 'StoryDeck Save File', accept: {'application/json': ['.json']} }]
+    });
+    // Start autosave timer
+    startAutosaveTimer();
+    // Save immediately
+    await writeToFile();
+    showToast('Autosave set up - saving every ' + autosaveMinutes + ' min');
+  } catch(err) {
+    if (err.name !== 'AbortError') {
+      showToast('Could not set up autosave: ' + err.message);
+    }
+  }
+}
+
+async function writeToFile() {
+  if (!fileHandle) return false;
+  try {
+    updateAutosaveUI('saving');
+    const json = JSON.stringify(state, null, 2);
+    const writable = await fileHandle.createWritable();
+    await writable.write(json);
+    await writable.close();
+    lastSaveTime = Date.now();
+    unsavedChanges = false;
+    updateAutosaveUI('saved');
+    return true;
+  } catch(err) {
+    updateAutosaveUI('error');
+    showToast('Autosave failed: ' + err.message);
+    return false;
+  }
+}
+
+function startAutosaveTimer() {
+  if (autosaveTimer) clearInterval(autosaveTimer);
+  autosaveTimer = setInterval(async () => {
+    if (unsavedChanges && fileHandle) {
+      await writeToFile();
+    }
+  }, autosaveMinutes * 60 * 1000);
+}
+
+function changeAutosaveInterval() {
+  autosaveMinutes = parseInt(document.getElementById('autosave-interval').value);
+  if (fileHandle) {
+    startAutosaveTimer();
+    showToast('Autosave interval set to ' + autosaveMinutes + ' min');
+  }
+}
+
+// Manual save - uses file handle if available, otherwise downloads
+async function saveManual() {
+  if (fileHandle) {
+    const ok = await writeToFile();
+    if (ok) showToast('Saved successfully');
+  } else {
+    // Fall back to download
+    saveAllProjects();
+  }
+}
+
+function saveAllProjects() {
+  try {
+    const pName = activeProject() ? activeProject().name.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') : 'storyboard';
+    const filename = pName + '_' + new Date().toISOString().slice(0,10) + '.json';
+    const json = JSON.stringify(state, null, 2);
+    const blob = new Blob([json], {type:'application/json'});
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const a = document.createElement('a');
+      a.href = e.target.result;
+      a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      lastSaveTime = Date.now();
+      unsavedChanges = false;
+      updateAutosaveUI('saved');
+      showToast('Saved to ' + filename);
+    };
+    reader.readAsDataURL(blob);
+  } catch(err) {
+    try {
+      navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+      showToast('Copied to clipboard - paste into a .json file');
+    } catch(e) {
+      showToast('Save failed - try from your desktop file instead');
+    }
+  }
+}
+
+// Warn before closing if there are unsaved changes
+window.addEventListener('beforeunload', e => {
+  if (unsavedChanges && fileHandle) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+function loadAllProjects(event) {
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try {
+      const loaded=JSON.parse(e.target.result);
+      if(!loaded.projects||!Array.isArray(loaded.projects)) throw new Error('Invalid');
+      if(!confirm('Load this file? This replaces your current session.')) return;
+      state=loaded; saveState(); renderSidebar(); renderProjectView();
+      showToast('Loaded '+loaded.projects.length+' project(s) ✓');
+    } catch(err){alert('Could not read that file. Make sure it is a StoryDeck .json save file.');}
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* =======================================
+   NOTES VIEW
+======================================= */
+function renderNotesView() {
+  const proj = activeProject(); if (!proj) return;
+  document.getElementById('notes-view-title').textContent = proj.name + ' — Notes';
+  const input = document.getElementById('notes-view-input');
+  input.value = proj.notes || '';
+  updateNotesWordCount();
+}
+function saveNotesView() {
+  const proj = activeProject(); if (!proj) return;
+  proj.notes = document.getElementById('notes-view-input').value;
+  saveState();
+  updateNotesWordCount();
+  showToast('Notes saved');
+}
+function updateNotesWordCount() {
+  const input = document.getElementById('notes-view-input');
+  const wc = document.getElementById('notes-word-count');
+  if (!input || !wc) return;
+  const words = input.value.trim() ? input.value.trim().split(/\s+/).length : 0;
+  wc.textContent = words + ' word' + (words!==1?'s':'');
+}
+document.getElementById('notes-view-input')?.addEventListener('input', updateNotesWordCount);
+function closeScratchpad(){} // kept for Escape key compat
+
+/* =======================================
+   TOAST
+======================================= */
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._t); t._t=setTimeout(()=>t.style.opacity='0',2800);
+}
+
+/* =======================================
+   KEYBOARD
+======================================= */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeCardModal();closeProjModal();closeCharModal();closeMoveModal();closeScratchpad();closeChapterTitlePrompt();closeChapterEditModal();}
+  if((e.metaKey||e.ctrlKey)&&e.key==='z'){
+    // Only intercept undo when not typing in a text field
+    const tag = document.activeElement.tagName;
+    const isEditable = document.activeElement.contentEditable === 'true';
+    if(tag !== 'INPUT' && tag !== 'TEXTAREA' && !isEditable) {
+      e.preventDefault(); undo();
+    }
+  }
+  if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();openCardModal();}
+  if((e.metaKey||e.ctrlKey)&&e.key==='f'){e.preventDefault();document.getElementById('search-input').focus();}
+  const editor=document.getElementById('card-body-input');
+  if(document.activeElement===editor&&(e.ctrlKey||e.metaKey)){
+    if(e.key==='b'){e.preventDefault();fmt('bold');}
+    if(e.key==='i'){e.preventDefault();fmt('italic');}
+    if(e.key==='u'){e.preventDefault();fmt('underline');}
+  }
+});
+
+/* =======================================
+   UTILS
+======================================= */
+function isCategorized(c) {
+  if (!c.chapter || c.chapter.trim() === '') return false;
+  const {act, chapter} = splitActChapter(c.chapter);
+  // Accept if has an act OR a chapter (not just empty string)
+  return !!(act || chapter);
+}
+
+function esc(str){return(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function abbrevChapter(chapter) {
+  if(!chapter) return '';
+  const {act, chapter:chap} = splitActChapter(chapter);
+  // On cards: show only the Act (chapter number is auto-generated in views)
+  if(act) return esc(act.replace(/^act\s+/i,'ACT ').replace(/^chapter\s+/i,'CH '));
+  // If no act, show abbreviated chapter
+  if(chap) return esc(chap.replace(/^chapter\s+/i,'CH ').replace(/^act\s+/i,'ACT '));
+  return esc(chapter);
+}
+
+/* =======================================
+   MIGRATE OLD DATA
+======================================= */
+(function(){
+  // Try v2 first, then v1
+  const v2=localStorage.getItem('storyboard-v2');
+  const v1cards=localStorage.getItem('story-cards');
+  const v1title=localStorage.getItem('book-title');
+  if(state.projects.length===0){
+    const src=v2?JSON.parse(v2):null;
+    if(src&&src.projects&&src.projects.length>0){
+      state=src; state.projects.forEach(p=>{if(!p.characters)p.characters=[];if(!p.flagLabels)p.flagLabels={};});
+      saveState();
+    } else if(v1cards){
+      try{const cards=JSON.parse(v1cards);if(cards.length>0){const proj={id:Date.now().toString(),name:v1title||'My Story',color:'#f0c060',desc:'',cards,characters:[],flagLabels:{}};state.projects.push(proj);state.activeId=proj.id;saveState();}}catch(e){}
+    }
+  }
+  // Ensure all projects have new fields
+  state.projects.forEach(p=>{
+    if(!p.characters)p.characters=[];
+    if(!p.flagLabels)p.flagLabels={};
+    // Migrate: add chapterTitle to cards that don't have it
+    function migrateCards(cards) {
+      cards.forEach(c => {
+        if(!c.chapterTitle) {
+          // Use stripped title as chapter title (removes "CH N —" prefix)
+          c.chapterTitle = stripChPrefix(c.title||'') || c.title || '';
+        }
+        if(c.children) migrateCards(c.children);
+      });
+    }
+    migrateCards(p.cards||[]);
+  });
+})();
+
+renderSidebar();
+renderProjectView();
+function ipadOpen(){document.querySelector('.sidebar').classList.add('ipad-open');document.getElementById('ipad-dim').classList.add('on');}
+function ipadClose(){document.querySelector('.sidebar').classList.remove('ipad-open');document.getElementById('ipad-dim').classList.remove('on');}
+document.addEventListener('click',function(e){
+  if(e.target.closest('.project-item'))setTimeout(ipadClose,200);
+  // Chapter edit color swatches
+  if(e.target.closest('.ch-edit-color')){
+    document.querySelectorAll('.ch-edit-color').forEach(el=>el.classList.remove('active'));
+    e.target.closest('.ch-edit-color').classList.add('active');
+  }
+});
+function chEditCharSearch(q){ /* simple stub — can enhance later */ }
+function chEditCharKey(e){ if(e.key==='Enter'){ e.preventDefault(); } }
+
+/* =======================================
+   CHAPTER EDIT MODAL
+======================================= */
+let chEditCardId = null;
+
+function openChapterEditModal(card) {
+  chEditCardId = card.id;
+  const proj = activeProject(); if(!proj) return;
+  // Pre-fill fields
+  document.getElementById('ch-edit-title').value = card.chapterTitle || stripChPrefix(card.title||'') || '';
+  const {act} = splitActChapter(card.chapter||'');
+  // Set act dropdown
+  const sel = document.getElementById('ch-edit-act');
+  const stdOpts = ['','Act 1','Act 2','Act 3','Prologue','Epilogue'];
+  sel.value = stdOpts.includes(act) ? act : '';
+  // Set color swatches
+  document.querySelectorAll('.ch-edit-color').forEach(el => el.classList.toggle('active', el.dataset.color === card.color));
+  // Set characters
+  chEditCharIds = [...(card.characters||[])];
+  renderChEditChars();
+  document.getElementById('ch-edit-overlay').classList.add('open');
+  setTimeout(()=>{ document.getElementById('ch-edit-title').focus(); document.getElementById('ch-edit-title').select(); }, 50);
+}
+
+function closeChapterEditModal() {
+  document.getElementById('ch-edit-overlay').classList.remove('open');
+  chEditCardId = null;
+}
+
+let chEditCharIds = [];
+
+function renderChEditChars() {
+  const proj = activeProject(); if(!proj) return;
+  const wrap = document.getElementById('ch-edit-char-tags');
+  wrap.innerHTML = chEditCharIds.map(id=>{
+    const ch=(proj.characters||[]).find(x=>x.id===id);
+    return ch?`<span class="char-tag">${esc(ch.name)}<button class="char-tag-remove" onclick="chEditCharIds=chEditCharIds.filter(x=>x!=='${id}');renderChEditChars()">×</button></span>`:'';
+  }).join('');
+}
+
+function applyChapterEdit() {
+  const proj = activeProject(); if(!proj) return;
+  const newTitle = document.getElementById('ch-edit-title').value.trim();
+  const newAct = document.getElementById('ch-edit-act').value;
+  const newColor = document.querySelector('.ch-edit-color.active')?.dataset.color;
+  const card = findCardAnywhere(proj.cards, chEditCardId); if(!card) return;
+  const {chapter: oldChap} = splitActChapter(card.chapter||'');
+  const newChapter = buildChapter(newAct, newTitle||oldChap||card.title);
+
+  // Apply to parent + all children
+  function applyToCard(c) {
+    if(newTitle) c.chapterTitle = newTitle;
+    if(newAct) c.chapter = buildChapter(newAct, c.chapterTitle||c.title);
+    if(newColor) c.color = newColor;
+    if(chEditCharIds.length > 0) c.characters = [...chEditCharIds];
+  }
+  applyToCard(card);
+  (card.children||[]).forEach(applyToCard);
+
+  saveState();
+  renderBreadcrumb();
+  renderBoard();
+  if(currentView==='chapters') renderChaptersView();
+  showToast('Chapter updated');
+  closeChapterEditModal();
+}
+
+/* =======================================
+   CHAPTER TITLE PROMPT (after stacking)
+======================================= */
+let chapterTitlePromptCardId = null;
+
+function openChapterTitlePrompt(cardId) {
+  chapterTitlePromptCardId = cardId;
+  const proj = activeProject(); if(!proj) return;
+  const card = findCardAnywhere(proj.cards, cardId); if(!card) return;
+  document.getElementById('ch-title-prompt-input').value = card.chapterTitle || stripChPrefix(card.title||'') || '';
+  document.getElementById('ch-title-prompt-overlay').classList.add('open');
+  setTimeout(()=>{
+    const inp = document.getElementById('ch-title-prompt-input');
+    inp.focus(); inp.select();
+  }, 50);
+}
+
+function saveChapterTitlePrompt() {
+  const proj = activeProject(); if(!proj) return;
+  const newTitle = document.getElementById('ch-title-prompt-input').value.trim();
+  if(newTitle && chapterTitlePromptCardId) {
+    const card = findCardAnywhere(proj.cards, chapterTitlePromptCardId);
+    if(card) {
+      card.chapterTitle = newTitle;
+      // Apply to all children too
+      (card.children||[]).forEach(c => c.chapterTitle = newTitle);
+      saveState(); renderBoard();
+      showToast(`Chapter title set to "${newTitle}"`);
+    }
+  }
+  document.getElementById('ch-title-prompt-overlay').classList.remove('open');
+  chapterTitlePromptCardId = null;
+}
+
+function closeChapterTitlePrompt() {
+  document.getElementById('ch-title-prompt-overlay').classList.remove('open');
+  chapterTitlePromptCardId = null;
+}
+let relabelCardId = null;
+
+function openRelabelActModal(cardId, fromAct, toAct) {
+  relabelCardId = cardId;
+  document.getElementById('relabel-from-act').textContent = fromAct || 'none';
+  document.getElementById('relabel-to-act').textContent = toAct || 'none';
+  // Pre-select the destination act
+  const sel = document.getElementById('relabel-act-select');
+  for(let i=0; i<sel.options.length; i++){
+    if(sel.options[i].value === toAct){ sel.selectedIndex=i; break; }
+  }
+  document.getElementById('relabel-act-overlay').classList.add('open');
+}
+
+function closeRelabelActModal() {
+  document.getElementById('relabel-act-overlay').classList.remove('open');
+  relabelCardId = null;
+}
+
+function applyRelabelAct() {
+  const proj = activeProject(); if(!proj) return;
+  const newAct = document.getElementById('relabel-act-select').value;
+  const card = findCardAnywhere(proj.cards, relabelCardId); if(!card) return;
+  // Update act for parent and all children
+  function updateAct(c) {
+    const {chapter} = splitActChapter(c.chapter||'');
+    c.chapter = buildChapter(newAct, chapter);
+    (c.children||[]).forEach(updateAct);
+  }
+  updateAct(card);
+  saveState(); renderBoard();
+  showToast('Act updated for all cards in group');
+  closeRelabelActModal();
+}
+</script>
+
+<!-- RELABEL ACT MODAL -->
+<div class="overlay" id="relabel-act-overlay">
+  <div class="modal" style="width:360px;max-width:96vw;gap:14px;">
+    <h2>Stack moved to new Act</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">
+      This group was in <strong id="relabel-from-act" style="color:var(--accent)"></strong> and dropped into <strong id="relabel-to-act" style="color:var(--accent)"></strong>. Update the Act label for all cards in this group?
+    </p>
+    <div class="field">
+      <label>New Act</label>
+      <select id="relabel-act-select">
+        <option value="">— No Act —</option>
+        <option value="Act 1">Act 1</option>
+        <option value="Act 2">Act 2</option>
+        <option value="Act 3">Act 3</option>
+        <option value="Prologue">Prologue</option>
+        <option value="Epilogue">Epilogue</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeRelabelActModal()">Skip</button>
+      <button class="btn" onclick="applyRelabelAct()">Update All Cards</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER TITLE PROMPT -->
+<div class="overlay" id="ch-title-prompt-overlay">
+  <div class="modal" style="width:380px;max-width:96vw;gap:14px;">
+    <h2>Name This Chapter</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">Give this stack a chapter title. It will appear on the board badge and in chapter headings.</p>
+    <div class="field">
+      <label>Chapter Title</label>
+      <input type="text" id="ch-title-prompt-input" placeholder="e.g. That Night / Again" autocomplete="off"
+        onkeydown="if(event.key==='Enter')saveChapterTitlePrompt();if(event.key==='Escape')closeChapterTitlePrompt();">
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeChapterTitlePrompt()">Skip</button>
+      <button class="btn" onclick="saveChapterTitlePrompt()">Set Chapter Title</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER EDIT MODAL -->
+<div class="overlay" id="ch-edit-overlay">
+  <div class="modal" style="width:460px;max-width:96vw;gap:14px;">
+    <h2>Edit Chapter</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">Changes apply to all cards in this chapter.</p>
+    <div class="field">
+      <label>Chapter Title</label>
+      <input type="text" id="ch-edit-title" placeholder="e.g. That Night / Again" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Act</label>
+      <select id="ch-edit-act">
+        <option value="">— No Act —</option>
+        <option value="Act 1">Act 1</option>
+        <option value="Act 2">Act 2</option>
+        <option value="Act 3">Act 3</option>
+        <option value="Prologue">Prologue</option>
+        <option value="Epilogue">Epilogue</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Card Color (applies to all)</label>
+      <div class="modal-colors">
+        <div class="modal-color-opt ch-edit-color" data-color="teal" style="background:var(--col-teal)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="pink" style="background:var(--col-pink)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="green" style="background:var(--col-green)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="orange" style="background:var(--col-orange)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="purple" style="background:var(--col-purple)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="red" style="background:var(--col-red)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="yellow" style="background:var(--col-yellow)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="blue" style="background:var(--col-blue)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="salmon" style="background:var(--col-salmon)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="white" style="background:var(--col-white);border:1px solid #ddd"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="gray" style="background:var(--col-gray)"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Characters (applies to all)</label>
+      <input type="text" id="ch-edit-char-input" placeholder="Type a name to add…" autocomplete="off"
+        oninput="chEditCharSearch(this.value)" onkeydown="chEditCharKey(event)">
+      <div id="ch-edit-char-dropdown" style="position:relative;"></div>
+      <div id="ch-edit-char-tags" class="char-selected-list" style="margin-top:6px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeChapterEditModal()">Cancel</button>
+      <button class="btn" onclick="applyChapterEdit()">Apply to All Cards</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
