@@ -14,7 +14,7 @@
   --text:#e8e8f0; --muted:#888899; --accent:#f0c060; --sidebar-w:240px;
   --col-teal:#00b4b4; --col-pink:#e040a0; --col-green:#40c060;
   --col-orange:#f08030; --col-purple:#9060e0; --col-red:#e04040;
-  --col-yellow:#d0c040; --col-blue:#4080e0; --col-salmon:#d08070; --col-white:#c8c8d8;
+  --col-yellow:#d0c040; --col-blue:#4080e0; --col-salmon:#d08070; --col-white:#ffffff; --col-gray:#c8c8d8;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;min-height:100vh;display:flex;overflow:hidden;}
@@ -83,33 +83,46 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 /* BOARD */
 .board-wrap{flex:1;overflow-y:auto;}
 .board-wrap::-webkit-scrollbar{width:6px;} .board-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-.board{padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;align-items:stretch;}
+.board{padding:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:start;}
 
 /* CARD */
-.card{border-radius:2px;padding:11px 11px 9px;position:relative;cursor:grab;user-select:none;height:var(--card-height,190px);min-height:var(--card-height,190px);max-height:var(--card-height,190px);transition:transform 0.15s,box-shadow 0.15s;display:flex;flex-direction:column;gap:0;overflow:hidden;}
+.card{border-radius:2px;padding:11px 11px 9px;position:relative;cursor:grab;user-select:none;height:var(--card-height,190px);min-height:var(--card-height,190px);max-height:var(--card-height,190px);transition:transform 0.15s,box-shadow 0.15s;display:flex;flex-direction:column;gap:0;overflow:hidden;flex:0 0 170px;width:170px;}
 .card:hover{transform:translateY(-2px) rotate(0.3deg);box-shadow:0 8px 24px rgba(0,0,0,0.5);z-index:2;}
 .card.dragging{opacity:0.35;transform:scale(0.95);}
 .card.drag-over{outline:2px dashed rgba(255,255,255,0.6);outline-offset:2px;}
+/* DROP GAP PLACEHOLDER */
+.drop-gap{width:6px;min-width:6px;border-radius:3px;background:linear-gradient(to bottom,transparent,white,transparent);box-shadow:0 0 10px 2px rgba(255,255,255,0.7);align-self:stretch;flex-shrink:0;pointer-events:none;animation:dropglow 0.8s ease-in-out infinite alternate;}
+@keyframes dropglow{from{opacity:0.6;box-shadow:0 0 8px 2px rgba(255,255,255,0.5);}to{opacity:1;box-shadow:0 0 16px 4px rgba(255,255,255,0.9);}}
+/* STACK DROP INDICATORS - keep gold glow for stacking */
+.card.drop-stack{outline:3px solid var(--accent) !important;outline-offset:3px;box-shadow:0 0 18px rgba(240,192,96,0.5) !important;}
+/* STACKED CARD VISUAL */
+.card-stack-wrap{position:relative;display:block;}
+.card-stack-shadow{position:absolute;border-radius:2px;z-index:0;pointer-events:none;}
+.card-stack-shadow-1{top:5px;left:5px;right:-5px;bottom:-5px;background:rgba(0,0,0,0.3);}
+.card-stack-shadow-2{top:9px;left:9px;right:-9px;bottom:-9px;background:rgba(0,0,0,0.2);}
+.card.stacked-top{position:relative;z-index:1;}
+.card-stack-count{position:absolute;bottom:8px;left:10px;background:rgba(0,0,0,0.55);color:rgba(255,255,255,0.95);font-family:'Courier New',monospace;font-size:0.58rem;padding:2px 7px;border-radius:10px;z-index:5;pointer-events:none;letter-spacing:0.03em;}
 .card.search-dim{opacity:0.25;}
 .card.search-match{outline:2px solid var(--accent);outline-offset:2px;}
-.card-chapter-tag{font-family:'Courier New', Courier, monospace;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(0,0,0,0.5);margin-bottom:2px;flex-shrink:0;}
+.card-chapter-tag{display:none;} /* replaced by badge */
+/* Act + Chapter title badge — black oval, white text */
+.card-ch-badge{display:inline-block;background:rgba(0,0,0,0.75);color:#fff;font-family:'Courier New',monospace;font-size:0.52rem;font-weight:500;letter-spacing:0.05em;padding:2px 9px;border-radius:10px;margin-bottom:5px;flex-shrink:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;}
 .card-title{font-family:var(--card-font,'Courier New', Courier, monospace);font-size:calc(var(--card-font-size,0.74rem) * 0.95);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(0,0,0,0.85);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex-shrink:0;margin-bottom:1px;}
-.card-body{font-size:var(--card-font-size);font-family:var(--card-font);color:rgba(0,0,0,0.72);line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex-shrink:0;flex:1;margin:3px 0 4px;}
+.card-body{font-size:var(--card-font-size);font-family:var(--card-font);color:rgba(0,0,0,0.72);line-height:1.4;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;flex:1;min-height:0;margin:3px 0 4px;word-break:break-word;}
 .card-chars{display:flex;flex-wrap:nowrap;gap:3px;margin-top:auto;padding-top:3px;overflow:hidden;flex-shrink:0;align-items:center;}
 .card-char-tag{font-family:'Courier New', Courier, monospace;font-size:0.54rem;padding:1px 5px;background:rgba(0,0,0,0.15);color:rgba(0,0,0,0.65);border-radius:10px;}
-.card-actions{display:none;gap:4px;flex-wrap:wrap;position:absolute;bottom:0;left:0;right:0;padding:6px 8px 6px 8px;background:linear-gradient(to top,rgba(0,0,0,0.5) 0%,rgba(0,0,0,0.2) 100%);border-radius:0 0 2px 2px;z-index:6;justify-content:flex-end;}
+.card-actions{display:none;gap:4px;flex-wrap:wrap;position:absolute;bottom:0;left:0;right:0;padding:6px 8px 6px 8px;background:linear-gradient(to top,rgba(0,0,0,0.72) 0%,rgba(0,0,0,0.45) 60%,transparent 100%);border-radius:0 0 2px 2px;z-index:6;justify-content:flex-end;}
 .card:hover .card-actions{display:flex;}
 .card:hover .card-scene-count{z-index:10;}
-.card-btn{font-family:'Courier New', Courier, monospace;font-size:0.58rem;padding:2px 6px;border:1px solid rgba(0,0,0,0.3);background:rgba(255,255,255,0.3);cursor:pointer;color:rgba(0,0,0,0.7);border-radius:1px;transition:background 0.1s;}
-.card-btn:hover{background:rgba(255,255,255,0.5);}
-.card-btn.del{border-color:rgba(150,0,0,0.4);color:rgba(130,0,0,0.8);}
-.card-btn.del:hover{background:rgba(255,100,100,0.4);}
+.card-btn{font-family:'Courier New', Courier, monospace;font-size:0.58rem;padding:2px 6px;border:1px solid rgba(255,255,255,0.4);background:rgba(0,0,0,0.35);cursor:pointer;color:rgba(255,255,255,0.9);border-radius:1px;transition:background 0.1s;}
+.card-btn:hover{background:rgba(0,0,0,0.6);}
+.card-btn.del{border-color:rgba(255,100,100,0.6);color:rgba(255,160,160,0.95);}
+.card-btn.del:hover{background:rgba(180,30,30,0.5);}
 .flag-corner{position:absolute;top:6px;right:6px;display:flex;gap:2px;z-index:3;flex-wrap:wrap;max-width:60px;justify-content:flex-end;}
-.card-index{position:absolute;top:6px;left:8px;font-family:'Courier New', Courier, monospace;font-size:0.52rem;color:rgba(0,0,0,0.35);line-height:1;z-index:10;}
 .flag-pip{width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.25);}
 .flag-tooltip{position:absolute;top:22px;right:6px;background:rgba(0,0,0,0.82);color:#fff;font-family:'Courier New', Courier, monospace;font-size:0.58rem;padding:4px 8px;border-radius:2px;max-width:150px;line-height:1.4;z-index:10;display:none;pointer-events:none;white-space:pre-wrap;}
 .card:hover .flag-tooltip{display:block;}
-.card-add{border:1px dashed var(--border);border-radius:2px;height:190px;min-height:190px;max-height:190px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.7rem;letter-spacing:0.05em;transition:border-color 0.15s,color 0.15s;flex-direction:column;gap:6px;align-self:start;}
+.card-add{border:1px dashed var(--border);border-radius:2px;height:var(--card-height,190px);min-height:var(--card-height,190px);max-height:var(--card-height,190px);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.7rem;letter-spacing:0.05em;transition:border-color 0.15s,color 0.15s;flex-direction:column;gap:6px;flex:0 0 170px;width:170px;}
 .card-add:hover{border-color:var(--accent);color:var(--accent);}
 .card-add .plus{font-size:1.5rem;line-height:1;}
 .chapter-label{grid-column:1/-1;font-family:Georgia, 'Times New Roman', serif;font-size:0.95rem;color:var(--accent);padding:6px 0 2px;border-bottom:1px solid var(--border);margin-top:8px;}
@@ -258,7 +271,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .breadcrumb-back:hover{border-color:var(--accent);color:var(--accent);}
 
 /* SCENE COUNT BADGE ON CARD */
-.card-children-inline{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:0;margin-bottom:2px;}
+.card-children-inline{width:100%;display:flex;flex-wrap:wrap;gap:12px;padding:0;margin-bottom:2px;}
 /* card-child-inline now just uses the same .card style */
 .card-child-inline{border-radius:2px;padding:11px 11px 9px;position:relative;cursor:grab;user-select:none;height:190px;min-height:190px;max-height:190px;transition:transform 0.15s,box-shadow 0.15s;display:flex;flex-direction:column;gap:0;overflow:hidden;}
 .card-child-inline:hover{transform:translateY(-2px) rotate(0.3deg);box-shadow:0 8px 24px rgba(0,0,0,0.5);z-index:2;}
@@ -274,7 +287,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
   /* Hide all UI chrome */
   .sidebar,.header,.view-tabs,.toolbar,.search-bar,.char-panel,
   .card-actions,.card-add,.breadcrumb,.flag-corner,
-  #view-acts,#view-flags,#view-notes,#view-uncategorized,#view-chapters{display:none!important;}
+  #view-acts,#view-flags,#view-notes,#view-uncategorized,#view-chapters,#view-beats{display:none!important;}
 
   body{display:block;background:white;color:#111;font-family:Georgia,serif;margin:0;padding:0;}
   .main{display:block;overflow:visible;}
@@ -355,33 +368,24 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
         <button class="btn" style="flex:1;padding:9px;font-size:0.75rem;" onclick="saveManual()">💾 Save</button>
         <button class="btn" style="flex:1;padding:9px;font-size:0.75rem;" onclick="document.getElementById('load-file-input').click()">📂 Load</button>
       </div>
+      <div id="autosave-top" style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span id="autosave-dot" style="width:7px;height:7px;border-radius:50%;background:var(--border);display:inline-block;flex-shrink:0"></span>
+          <span id="autosave-label" style="font-family:'Courier New',monospace;font-size:0.57rem;color:var(--muted);">Not saved yet</span>
+        </div>
+        <button id="autosave-setup-btn" onclick="setupAutosave()" style="background:none;border:none;color:var(--accent);font-family:'Courier New',monospace;font-size:0.57rem;cursor:pointer;text-decoration:underline;padding:0;white-space:nowrap;">Set autosave</button>
+      </div>
+      <select id="autosave-interval" onchange="changeAutosaveInterval()" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-family:'Courier New',monospace;font-size:0.57rem;cursor:pointer;outline:none;padding:3px;width:100%;">
+        <option value="1">Autosave every 1 min</option>
+        <option value="3" selected>Autosave every 3 min</option>
+        <option value="5">Autosave every 5 min</option>
+        <option value="10">Autosave every 10 min</option>
+      </select>
     </div>
   </div>
   <div class="sidebar-section-label">Projects</div>
   <div class="project-list" id="project-list"></div>
-  <div class="sidebar-footer">
-    <button class="btn-new-project" onclick="openNewProjectModal()">+ New Project</button>
-    <div style="display:flex;gap:6px;margin-top:7px">
-      <button class="btn-new-project" style="flex:1;border-style:solid;border-color:var(--accent);color:var(--accent)" onclick="saveManual()">💾 Save</button>
-      <button class="btn-new-project" style="flex:1;border-style:solid" onclick="document.getElementById('load-file-input').click()">📂 Load</button>
-    </div>
-    <!-- Autosave status -->
-    <div id="autosave-status" style="font-family:'Courier New', Courier, monospace;font-size:0.57rem;color:var(--muted);text-align:center;margin-top:8px;line-height:1.8">
-      <div id="autosave-indicator" style="display:flex;align-items:center;justify-content:center;gap:5px">
-        <span id="autosave-dot" style="width:6px;height:6px;border-radius:50%;background:var(--border);display:inline-block;flex-shrink:0"></span>
-        <span id="autosave-label">Autosave: not set up</span>
-      </div>
-      <div style="margin-top:3px">
-        <button id="autosave-setup-btn" onclick="setupAutosave()" style="background:none;border:none;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.57rem;cursor:pointer;text-decoration:underline;padding:0">Set save location</button>
-        <span style="color:var(--border);margin:0 4px">|</span>
-        <select id="autosave-interval" onchange="changeAutosaveInterval()" style="background:var(--bg);border:none;color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.57rem;cursor:pointer;outline:none;">
-          <option value="1">Every 1 min</option>
-          <option value="3" selected>Every 3 min</option>
-          <option value="5">Every 5 min</option>
-          <option value="10">Every 10 min</option>
-        </select>
-      </div>
-    </div>
+  <div class="sidebar-footer" style="padding:6px 10px;">
   </div>
 </aside>
 <input type="file" id="load-file-input" accept=".json" style="display:none" onchange="loadAllProjects(event)">
@@ -426,15 +430,17 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
           <div class="ctx-item" onclick="printBoard();toggleExportMenu()">🖨 Print Cards</div>
         </div>
       </div>
+      <button class="btn ghost" onclick="undo()" title="Undo (Cmd+Z)" style="padding:6px 12px;">↩ Undo</button>
       <button class="btn" onclick="openCardModal()">+ New Card</button>
     </header>
 
     <!-- VIEW TABS -->
     <div class="view-tabs">
       <div class="view-tab active" data-view="board" onclick="switchView('board')">Board</div>
-      <div class="view-tab" data-view="uncategorized" onclick="switchView('uncategorized')">Ideas <span id="uncat-count-badge" style="font-size:0.58rem;background:rgba(240,192,96,0.2);color:var(--accent);padding:1px 5px;border-radius:8px;margin-left:2px;display:none"></span></div>
-      <div class="view-tab" data-view="acts" onclick="switchView('acts')">Acts</div>
+      <div class="view-tab" data-view="beats" onclick="switchView('beats')">Beats</div>
       <div class="view-tab" data-view="chapters" onclick="switchView('chapters')">Chapters</div>
+      <div class="view-tab" data-view="acts" onclick="switchView('acts')">Acts</div>
+      <div class="view-tab" data-view="uncategorized" onclick="switchView('uncategorized')">Ideas <span id="uncat-count-badge" style="font-size:0.58rem;background:rgba(240,192,96,0.2);color:var(--accent);padding:1px 5px;border-radius:8px;margin-left:2px;display:none"></span></div>
       <div class="view-tab" data-view="characters" onclick="switchView('characters')">Characters</div>
       <div class="view-tab" data-view="flags" onclick="switchView('flags')">⚙ Settings</div>
       <div class="view-tab" data-view="notes" onclick="switchView('notes')">📝 Notes</div>
@@ -458,7 +464,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
         <div class="color-dot" data-filter="yellow" style="background:var(--col-yellow)"></div>
         <div class="color-dot" data-filter="blue" style="background:var(--col-blue)"></div>
         <div class="color-dot" data-filter="salmon" style="background:var(--col-salmon)"></div>
-        <div class="color-dot" data-filter="white" style="background:var(--col-white)"></div>
+        <div class="color-dot" data-filter="white" style="background:var(--col-white);border:1px solid #ddd"></div>
+        <div class="color-dot" data-filter="gray" style="background:var(--col-gray)"></div>
         <div class="toolbar-sep"></div>
         <span class="toolbar-label">Sort Cards</span>
         <select id="sort-select" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.66rem;padding:3px 7px;outline:none;cursor:pointer;">
@@ -495,6 +502,9 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
           <div class="card-add" onclick="openCardModal()"><span class="plus">+</span><span>Add card</span></div>
         </div>
       </div>
+
+      <!-- BEATS VIEW -->
+      <div id="view-beats" style="flex:1;overflow-y:auto;display:none;flex-direction:column;"></div>
 
       <!-- ACTS VIEW -->
       <div id="view-uncategorized" style="flex:1;overflow-y:auto;display:none;flex-direction:column;"></div>
@@ -613,31 +623,19 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
       <div id="card-body-input" contenteditable="true" class="rich-editor" placeholder="What happens? Key details, beats, ideas…" oninput="updateCardWordCount()"></div>
       <div style="text-align:right;margin-top:4px;"><span id="card-word-count" style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted)"></span></div>
     </div>
-    <div class="act-chapter-row">
-      <div class="field">
-        <label>Act</label>
-        <select id="card-act-input">
-          <option value="">— No Act —</option>
-          <option value="Act 1">Act 1</option>
-          <option value="Act 2">Act 2</option>
-          <option value="Act 3">Act 3</option>
-          <option value="Prologue">Prologue</option>
-          <option value="Epilogue">Epilogue</option>
-          <option value="custom">Custom…</option>
-        </select>
-        <input type="text" id="card-act-custom" placeholder="Type act name…" style="display:none;margin-top:6px;width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.86rem;padding:8px 11px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-      <div class="field">
-        <label>Chapter</label>
-        <div class="chapter-typeahead">
-          <input type="text" class="chapter-typeahead-input" id="card-chapter-input"
-                 placeholder="3  (type a number — saves as Chapter 3)"
-                 autocomplete="off"
-                 oninput="chapterTypeaheadInput()"
-                 onkeydown="chapterTypeaheadKey(event)">
-          <div class="chapter-dropdown" id="chapter-dropdown"></div>
-        </div>
-      </div>
+    <div class="field">
+      <label>Act</label>
+      <select id="card-act-input">
+        <option value="">— No Act —</option>
+        <option value="Act 1">Act 1</option>
+        <option value="Act 2">Act 2</option>
+        <option value="Act 3">Act 3</option>
+        <option value="Prologue">Prologue</option>
+        <option value="Epilogue">Epilogue</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <input type="text" id="card-act-custom" placeholder="Type act name…" style="display:none;margin-top:6px;width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;font-size:0.86rem;padding:8px 11px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      <input type="hidden" id="card-chapter-input" value="">
     </div>
     <div class="field">
       <label>Characters in this beat</label>
@@ -662,7 +660,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
         <div class="modal-color-opt" data-color="yellow" style="background:var(--col-yellow)"></div>
         <div class="modal-color-opt" data-color="blue" style="background:var(--col-blue)"></div>
         <div class="modal-color-opt" data-color="salmon" style="background:var(--col-salmon)"></div>
-        <div class="modal-color-opt" data-color="white" style="background:var(--col-white)"></div>
+        <div class="modal-color-opt" data-color="white" style="background:var(--col-white);border:1px solid #ddd"></div>
+        <div class="modal-color-opt" data-color="gray" style="background:var(--col-gray)"></div>
       </div>
     </div>
     <div class="field">
@@ -730,13 +729,11 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
     <div id="move-chapter-content">
       <!-- Move to Uncategorized -->
       <button onclick="moveToUncategorized()" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:9px;cursor:pointer;margin-bottom:12px;transition:all 0.12s;border-radius:2px;text-align:left;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">⬚ Move to Ideas — remove Act &amp; Chapter</button>
-      <div style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);margin-bottom:8px">Or pick a chapter card to nest this beat inside, or change its chapter label.</div>
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);margin-bottom:8px">Pick a chapter card to nest this beat inside.</div>
       <!-- Section: nest inside a card -->
       <div style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px">Nest inside a chapter card</div>
-      <div id="move-chapter-list" style="display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto;margin-bottom:12px"></div>
-      <!-- Section: change chapter label -->
-      <div style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px">Or change Chapter label to…</div>
-      <div id="move-label-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px"></div>
+      <div id="move-chapter-list" style="display:flex;flex-direction:column;gap:5px;max-height:320px;overflow-y:auto;margin-bottom:12px"></div>
+      <div id="move-label-list" style="display:none"></div>
     </div>
     <!-- Project tab content -->
     <div id="move-project-content" style="display:none">
@@ -764,7 +761,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 /* =======================================
    DATA & STATE
 ======================================= */
-const COLORS = {teal:'#00b4b4',pink:'#e040a0',green:'#40c060',orange:'#f08030',purple:'#9060e0',red:'#e04040',yellow:'#d0c040',blue:'#4080e0',salmon:'#d08070',white:'#c8c8d8'};
+const COLORS = {teal:'#00b4b4',pink:'#e040a0',green:'#40c060',orange:'#f08030',purple:'#9060e0',red:'#e04040',yellow:'#d0c040',blue:'#4080e0',salmon:'#d08070',white:'#ffffff',gray:'#c8c8d8'};
 const FLAG_COLORS = {red:'#e04040',yellow:'#d0c040',blue:'#4080e0',green:'#40c060',gold:'#f0c060'};
 const FLAG_KEYS = ['red','yellow','blue','green','gold'];
 const DEFAULT_FLAG_LABELS = {red:'Questions',yellow:'Revisions',blue:'Research',green:'Misc',gold:'Final ⭐'};
@@ -783,12 +780,72 @@ let state = loadState();
 // Flag labels are stored per-project
 let editingCardId=null, selectedCardColor='teal', selectedFlag='none', selectedFlags=[], selectedFlagNotes={};
 let filterColor='all', flagFilter='all', charFilter=null;
-let dragSrcId=null, selectedProjColor='#f0c060', editingProjId=null;
+let dragSrcId=null, dragSrcIsStack=false, selectedProjColor='#f0c060', editingProjId=null;
 let drillStack=[]; // [{cardId, title}] - stack of parent cards we've drilled into
 let ctxTargetId=null, editingCharId=null, movingCardId=null;
 let selectedCharIds=[], searchQuery='', currentView='board';
 
 function activeProject() { return state.projects.find(p=>p.id===state.activeId)||null; }
+
+/* =======================================
+   UNDO HISTORY
+======================================= */
+const undoStack = [];
+const MAX_UNDO = 20;
+
+function pushUndo() {
+  undoStack.push(JSON.stringify(state));
+  if(undoStack.length > MAX_UNDO) undoStack.shift();
+}
+
+function undo() {
+  if(undoStack.length === 0){ showToast('Nothing to undo'); return; }
+  const prev = undoStack.pop();
+  // Close any open modal first
+  closeCardModal();
+  state = JSON.parse(prev);
+  localStorage.setItem('storyboard-v3', JSON.stringify(state));
+  renderSidebar();
+  // Re-render current view without switching away from it
+  const v = currentView;
+  if(v==='board') renderBoard();
+  else if(v==='uncategorized') renderUncategorized();
+  else if(v==='acts') renderActsView();
+  else if(v==='chapters') renderChaptersView();
+  else if(v==='characters') renderCharactersView();
+  else renderBoard();
+  showToast('Undo ✓');
+}
+
+function clearDropClasses() {
+  document.querySelectorAll('.card.drop-before,.card.drop-after,.card.drop-stack').forEach(el=>{
+    el.classList.remove('drop-before','drop-after','drop-stack');
+  });
+}
+
+/* Strip "CH N —" or "Chapter N —" prefix from a title for clean display */
+function stripChPrefix(title) {
+  return (title||'').replace(/^ch\s*\d+\s*[—\-–]+\s*/i,'').replace(/^chapter\s*\d+\s*[—\-–]+\s*/i,'').trim();
+}
+function buildChapterNumberMap(proj) {
+  if(!proj) return {};
+  const map = {};
+  let chCounter = 0;
+  proj.cards.forEach(c => {
+    if(!isCategorized(c)) return;
+    const ch = c.chapter||'';
+    if(!map[ch]) {
+      chCounter++;
+      const {act} = splitActChapter(ch);
+      map[ch] = {chNum: chCounter, act};
+    }
+  });
+  return map;
+}
+function removeDropGap() {
+  const gap = document.getElementById('active-drop-gap');
+  if(gap) gap.remove();
+}
 function getFlagLabels() {
   const proj = activeProject();
   return (proj && proj.flagLabels) ? {...DEFAULT_FLAG_LABELS,...proj.flagLabels} : {...DEFAULT_FLAG_LABELS};
@@ -800,12 +857,15 @@ function getFlagLabels() {
 function switchView(view) {
   currentView = view;
 
-  // ALWAYS clear drill stack and breadcrumb when clicking any tab
-  drillStack = [];
-  renderBreadcrumb();
+  // Clear drill stack for all tabs EXCEPT beats (beats IS the drill-down view)
+  if(view !== 'beats') {
+    drillStack = [];
+    renderBreadcrumb();
+  }
 
   document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t.dataset.view===view));
   document.getElementById('view-board').style.display = view==='board' ? 'flex' : 'none';
+  document.getElementById('view-beats').style.display = view==='beats' ? 'flex' : 'none';
   document.getElementById('view-uncategorized').style.display = view==='uncategorized' ? 'flex' : 'none';
   document.getElementById('view-acts').style.display = view==='acts' ? 'flex' : 'none';
   document.getElementById('view-chapters').style.display = view==='chapters' ? 'flex' : 'none';
@@ -818,16 +878,13 @@ function switchView(view) {
   flagFilter='all'; filterColor='all'; charFilter=null; searchQuery='';
   document.querySelectorAll('.flag-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.flagfilter==='all'));
   document.querySelectorAll('.color-dot').forEach(d=>d.classList.toggle('active',d.dataset.filter==='all'));
-  // Clear search box
   const sq = document.getElementById('search-input');
   if(sq) sq.value='';
   const sc = document.getElementById('search-count');
   if(sc) sc.style.display='none';
 
-  if (view==='board') {
-    document.getElementById('sort-select').value='manual';
-    renderBoard();
-  }
+  if (view==='board') { document.getElementById('sort-select').value='manual'; renderBoard(); }
+  if (view==='beats') renderBeatsView();
   if (view==='uncategorized') renderUncategorized();
   if (view==='acts') renderActs();
   if (view==='chapters') renderChaptersView();
@@ -1304,6 +1361,7 @@ function updateFlagPickerLabels() {
 ======================================= */
 function openCardModal(id=null) {
   const proj=activeProject(); if(!proj) return;
+  pushUndo();
   editingCardId=id;
   document.getElementById('card-overlay').classList.add('open');
   document.getElementById('card-modal-title').textContent=id?'Edit Card':'New Card';
@@ -1315,12 +1373,8 @@ function openCardModal(id=null) {
     document.getElementById('card-title-input').value=c.title;
     document.getElementById('card-body-input').innerHTML=c.body||'';
     setTimeout(updateCardWordCount, 50);
-    // Split stored chapter into act + chapter
-    const {act:loadedAct, chapter:loadedChap} = splitActChapter(c.chapter||'');
+    const {act:loadedAct} = splitActChapter(c.chapter||'');
     setActField(loadedAct);
-    // Show just the number if chapter is "Chapter N" pattern
-    const chDispVal = /^Chapter\s+(\d+)$/i.test(loadedChap) ? loadedChap.match(/\d+/)[0] : loadedChap;
-    document.getElementById('card-chapter-input').value=chDispVal;
     setCardColor(c.color); selectedFlagNotes={}; renderFlagPicker(c.flags&&c.flags.length?c.flags:(c.flag&&c.flag!=='none'?[c.flag]:[]), c.flagNote||'', c.flagNotes||{});
     selectedCharIds=[...(c.characters||[])];
   } else {
@@ -1328,45 +1382,32 @@ function openCardModal(id=null) {
     document.getElementById('card-body-input').innerHTML='';
     updateCardWordCount();
     selectedFlagNotes={}; renderFlagPicker([], '', {});
-
-    // Only pre-fill when drilled into a chapter — not on root Board view
     if (drillStack.length > 0) {
-      const proj = activeProject();
       const parentId = drillStack[drillStack.length - 1].cardId;
       const parentCard = findCardAnywhere(proj.cards, parentId);
       if (parentCard) {
-        // Pre-fill title from parent card
-        document.getElementById('card-title-input').value = parentCard.title || '';
-        // Pre-fill Act & Chapter from parent card
-        const {act: pAct, chapter: pChap} = splitActChapter(parentCard.chapter || '');
+        const {act: pAct} = splitActChapter(parentCard.chapter || '');
         setActField(pAct);
-        const pChapDisp = /^Chapter\s+(\d+)$/i.test(pChap) ? pChap.match(/\d+/)[0] : pChap;
-        document.getElementById('card-chapter-input').value = pChapDisp;
-        // Pre-fill characters from parent card
         selectedCharIds = [...(parentCard.characters || [])];
-        // Pre-fill color from parent card
         setCardColor(parentCard.color || 'white');
       } else {
-        setActField('');
-        document.getElementById('card-chapter-input').value = '';
-        selectedCharIds = [];
+        setActField(''); selectedCharIds = [];
       }
     } else {
-      // Board view — blank card, no pre-fill
-      setActField('');
-      document.getElementById('card-chapter-input').value = '';
-      selectedCharIds = [];
+      setActField(''); selectedCharIds = [];
       setCardColor('white');
     }
   }
   renderCharPicker(selectedCharIds);
   setTimeout(()=>{
     const ti = document.getElementById('card-title-input');
-    ti.focus();
-    ti.select(); // select all so typing immediately replaces it
+    ti.focus(); ti.select();
   },50);
 }
-function closeCardModal(){document.getElementById('card-overlay').classList.remove('open');editingCardId=null;}
+function closeCardModal(){
+  document.getElementById('card-overlay').classList.remove('open');
+  editingCardId=null;
+}
 function deleteFromModal() {
   if (!editingCardId) return;
   const btn = document.getElementById('modal-delete-btn');
@@ -1406,23 +1447,73 @@ function saveCard() {
   const title=document.getElementById('card-title-input').value.trim();
   const body=document.getElementById('card-body-input').innerHTML.trim();
   const actVal = getActValue();
-  let chapVal = document.getElementById('card-chapter-input').value.trim();
-  // If user typed just a number, prefix with "Chapter "
-  if (chapVal && /^\d+$/.test(chapVal)) chapVal = 'Chapter ' + chapVal;
-  const chapter = buildChapter(actVal, chapVal);
   const bodyText=document.getElementById('card-body-input').innerText.trim();
   if(!title&&!bodyText){closeCardModal();return;}
+
   if(editingCardId) {
     const c=findCardAnywhere(proj.cards, editingCardId);
     if(!c){closeCardModal();return;}
-    c.title=title;c.body=body;c.chapter=chapter;c.color=selectedCardColor;
-    c.flag=selectedFlags.length>0?selectedFlags[0]:'none';c.flags=[...selectedFlags];c.flagNotes=getFlagNotesObj();c.flagNote=getFlagNote();c.characters=[...selectedCharIds];
+    const {act: oldAct} = splitActChapter(c.chapter||'');
+    const chapterTitle = c.chapterTitle || c.title; // preserve existing chapter title
+    c.title=title;
+    c.body=body;
+    c.chapter = buildChapter(actVal||oldAct, chapterTitle);
+    c.color=selectedCardColor;
+    c.flag=selectedFlags.length>0?selectedFlags[0]:'none';
+    c.flags=[...selectedFlags];
+    c.flagNotes=getFlagNotesObj();
+    c.flagNote=getFlagNote();
+    c.characters=[...selectedCharIds];
   } else {
-    const cc2 = drillStack.length > 0 ? currentChildrenArray() : proj.cards;
-    cc2.push({id:Date.now().toString(),title,body,chapter,color:selectedCardColor,flag:selectedFlags.length>0?selectedFlags[0]:'none',flags:[...selectedFlags],flagNotes:getFlagNotesObj(),flagNote:getFlagNote(),characters:[...selectedCharIds],children:[],order:cc2.length});
+    let chapterTitle = title;
+    let chapter;
+    // Check if chapter input has a preset value (from openCardModalForChapter)
+    const presetChapter = document.getElementById('card-chapter-input').value.trim();
+    if(drillStack.length > 0) {
+      const parentId = drillStack[drillStack.length-1].cardId;
+      const parent = findCardAnywhere(proj.cards, parentId);
+      chapterTitle = parent ? (parent.chapterTitle||parent.title) : title;
+      chapter = parent ? parent.chapter : buildChapter(actVal, chapterTitle);
+      const cc2 = currentChildrenArray();
+      cc2.push({id:Date.now().toString(),title,body,chapter,chapterTitle,color:selectedCardColor,flag:selectedFlags.length>0?selectedFlags[0]:'none',flags:[...selectedFlags],flagNotes:getFlagNotesObj(),flagNote:getFlagNote(),characters:[...selectedCharIds],children:[],order:cc2.length});
+    } else if(presetChapter) {
+      // Adding from Chapters view — use preset chapter key, inherit chapterTitle from group
+      chapter = presetChapter;
+      let firstInChapter = null;
+      function findFirst(cards){cards.forEach(c=>{if(!firstInChapter&&c.chapter===presetChapter)firstInChapter=c;if(c.children)findFirst(c.children);});}
+      findFirst(proj.cards);
+      chapterTitle = firstInChapter ? (firstInChapter.chapterTitle||firstInChapter.title) : title;
+      const newCard = {id:Date.now().toString(),title,body,chapter,chapterTitle,color:selectedCardColor,flag:selectedFlags.length>0?selectedFlags[0]:'none',flags:[...selectedFlags],flagNotes:getFlagNotesObj(),flagNote:getFlagNote(),characters:[...selectedCharIds],children:[],order:0};
+      let insertIdx = -1;
+      proj.cards.forEach((c,i)=>{ if(c.chapter===presetChapter) insertIdx=i; });
+      if(insertIdx>=0){ proj.cards.splice(insertIdx+1,0,newCard); proj.cards.forEach((c,i)=>c.order=i); }
+      else { newCard.order=proj.cards.length; proj.cards.push(newCard); }
+    } else {
+      chapter = buildChapter(actVal, chapterTitle);
+      const newCard = {id:Date.now().toString(),title,body,chapter,chapterTitle,color:selectedCardColor,flag:selectedFlags.length>0?selectedFlags[0]:'none',flags:[...selectedFlags],flagNotes:getFlagNotesObj(),flagNote:getFlagNote(),characters:[...selectedCharIds],children:[],order:0};
+      if(actVal) {
+        let insertIdx = -1;
+        proj.cards.forEach((c,i) => {
+          const {act} = splitActChapter(c.chapter||'');
+          if(act === actVal) insertIdx = i;
+        });
+        if(insertIdx >= 0) {
+          proj.cards.splice(insertIdx+1, 0, newCard);
+          proj.cards.forEach((c,i) => c.order=i);
+        } else {
+          newCard.order = proj.cards.length;
+          proj.cards.push(newCard);
+        }
+      } else {
+        newCard.order = proj.cards.length;
+        proj.cards.push(newCard);
+      }
+    }
   }
   saveState(); renderSidebar(); updateUncatBadge();
   if(currentView==='uncategorized') renderUncategorized();
+  else if(currentView==='chapters') renderChaptersView();
+  else if(currentView==='beats') renderBeatsView();
   else renderBoard();
   closeCardModal();
 }
@@ -1448,6 +1539,7 @@ function deleteCard(id) {
 
 function doDeleteCard(id) {
   const proj=activeProject(); if(!proj) return;
+  pushUndo();
   function removeFromArray(arr) {
     const i=arr.findIndex(c=>c.id===id);
     if(i!==-1){arr.splice(i,1);arr.forEach((c,j)=>c.order=j);return true;}
@@ -1460,6 +1552,8 @@ function doDeleteCard(id) {
   }
   saveState(); renderSidebar(); updateUncatBadge();
   if(currentView==='uncategorized') renderUncategorized();
+  else if(currentView==='chapters') renderChaptersView();
+  else if(currentView==='beats') renderBeatsView();
   else renderBoard();
 }
 
@@ -1467,7 +1561,7 @@ function doDeleteCard(id) {
 function showDragWarning(cardId) {
   // Show a toast with an action button to open the edit modal
   const t = document.getElementById('toast');
-  t.innerHTML = `Add Act & Chapter first to place on Board — <button onclick="openCardModal('${cardId}');this.parentElement.style.opacity=0" style="background:none;border:1px solid var(--accent);color:var(--accent);font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:2px 10px;cursor:pointer;margin-left:8px;border-radius:2px;">Edit card</button>`;
+  t.innerHTML = `Add an Act first to place on Board — <button onclick="openCardModal('${cardId}');this.parentElement.style.opacity=0" style="background:none;border:1px solid var(--accent);color:var(--accent);font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:2px 10px;cursor:pointer;margin-left:8px;border-radius:2px;">Edit card</button>`;
   t.style.opacity = '1';
   clearTimeout(t._t);
   t._t = setTimeout(() => { t.style.opacity = '0'; t.innerHTML = ''; }, 4000);
@@ -1507,12 +1601,20 @@ function renameChapter(oldChapter) {
 function duplicateCard(id) {
   const proj = activeProject(); if (!proj) return;
   const src = findCardAnywhere(proj.cards, id); if (!src) return;
+  pushUndo();
   const copy = JSON.parse(JSON.stringify(src));
   copy.id = Date.now().toString();
   copy.title = (src.title||'') + ' (copy)';
   copy.children = [];
-  copy.order = proj.cards.length;
-  proj.cards.push(copy);
+  // Insert immediately after the original
+  const srcIdx = proj.cards.findIndex(x => x.id === id);
+  if(srcIdx !== -1) {
+    proj.cards.splice(srcIdx + 1, 0, copy);
+    proj.cards.forEach((c,i) => c.order = i);
+  } else {
+    copy.order = proj.cards.length;
+    proj.cards.push(copy);
+  }
   saveState(); renderSidebar(); renderBoard(); updateUncatBadge();
   showToast('Card duplicated');
 }
@@ -1744,12 +1846,15 @@ function renderBoard() {
       // Chapter divider
       const lbl=document.createElement('div');
       lbl.className='chapter-label';
-      lbl.style.cssText='grid-column:1/-1;display:flex;align-items:center;margin-top:12px;gap:8px;';
+      lbl.style.cssText='width:100%;display:flex;align-items:center;margin-top:12px;gap:8px;';
       const {act,chapter}=splitActChapter(ch);
       const titleSpan=document.createElement('span');
-      titleSpan.style.cssText='display:flex;align-items:center;gap:6px;';
+      titleSpan.style.cssText='display:flex;align-items:center;gap:6px;flex:1;min-width:0;';
       if(act&&chapter){
-        titleSpan.innerHTML=`<span style="opacity:0.6;font-size:0.75rem">${esc(act)}</span><span style="opacity:0.4">›</span><span style="font-size:1rem">${esc(chapter)}</span>`;
+        // Board divider: Act + chapterTitle (or parent card title)
+        const parentCard = flat[0];
+        const chTitle = parentCard ? (parentCard.chapterTitle || stripChPrefix(parentCard.title||'')) : chapter;
+        titleSpan.innerHTML=`<span style="opacity:0.55;font-size:0.75rem;flex-shrink:0;">${esc(act)}</span><span style="opacity:0.35;flex-shrink:0;">›</span><span style="font-size:1rem;">${esc(chTitle||chapter)}</span>`;
       } else {
         titleSpan.textContent=ch||'Ideas';
       }
@@ -1823,18 +1928,22 @@ function makeCard(c, sq='', cardIndex=null) {
   const extraChars=charNames.length-maxChars;
   const charHtml=charNames.length?`<div class="card-chars">${visibleChars.map(n=>`<div class="card-char-tag">${esc(n)}</div>`).join('')}${extraChars>0?`<div class="card-char-tag" style="background:rgba(0,0,0,0.2);color:rgba(0,0,0,0.55)">+${extraChars}</div>`:''}</div>`:'';
 
-    const childCount = (c.children||[]).length;
+  const childCount = (c.children||[]).length;
   const beatTotal = childCount + 1;
-  // Only show beats badge at root level — not when drilled in
-  const indexHtml = cardIndex !== null ? `<div class="card-index">#${cardIndex}</div>` : '';
-  const sceneCountHtml = (childCount > 0 && drillStack.length === 0)
-    ? `<div class="card-scene-count" onclick="drillInto('${c.id}')">▶ ${beatTotal} beat${beatTotal!==1?'s':''}</div>`
-    : '';
-  div.innerHTML=`${flagHtml}${c.chapter?`<div class="card-chapter-tag">${esc(c.chapter)}</div>`:''}
+  const bodyPreview = (c.body||'').replace(/<br\s*\/?>/gi,' ').replace(/<\/p>/gi,' ').replace(/<\/div>/gi,' ').replace(/<\/li>/gi,' ').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+
+  // Build "ACT 1 — CHAPTER TITLE" badge — hidden when drilled in
+  const {act} = splitActChapter(c.chapter||'');
+  const chTitle = c.chapterTitle || stripChPrefix(c.title||'');
+  let badgeText = '';
+  if(act && chTitle) badgeText = act.toUpperCase() + ' — ' + chTitle.toUpperCase();
+  else if(act) badgeText = act.toUpperCase();
+  else if(chTitle) badgeText = chTitle.toUpperCase();
+  const badgeHtml = badgeText ? `<div class="card-ch-badge">${esc(badgeText)}</div>` : '';
+
+  div.innerHTML=`${flagHtml}${badgeHtml}
 <div class="card-title">${esc(c.title)}</div>
-<div class="card-body">${c.body||''}</div>
-${sceneCountHtml}
-${indexHtml}
+<div class="card-body">${esc(bodyPreview)}</div>
 <div class="card-actions">
   ${(childCount > 0 && drillStack.length === 0) ? `<button class="card-btn" onclick="drillInto('${c.id}')">▶ Open</button>` : ''}
   <button class="card-btn" onclick="openCardModal('${c.id}')">Edit</button>
@@ -1843,53 +1952,319 @@ ${indexHtml}
   <button class="card-btn del" onclick="deleteCard('${c.id}')">Delete</button>
 </div>`;
 
-  div.addEventListener('dblclick',()=>openCardModal(c.id));
-  div.addEventListener('dragstart',e=>{dragSrcId=c.id;setTimeout(()=>div.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
-  div.addEventListener('dragend',()=>div.classList.remove('dragging'));
-  div.addEventListener('dragover',e=>{e.preventDefault();div.classList.add('drag-over');});
-  div.addEventListener('dragleave',()=>div.classList.remove('drag-over'));
+  div.addEventListener('dblclick',()=>{
+    // If stacked, double-click opens the stack instead of editing
+    if((c.children||[]).length > 0 && drillStack.length === 0) {
+      drillInto(c.id);
+    } else {
+      openCardModal(c.id);
+    }
+  });
+  div.addEventListener('dragstart',e=>{
+    dragSrcId=c.id;
+    dragSrcIsStack = (c.children||[]).length > 0 && drillStack.length === 0;
+    setTimeout(()=>div.classList.add('dragging'),0);
+    e.dataTransfer.effectAllowed='move';
+  });
+  div.addEventListener('dragend',()=>{div.classList.remove('dragging');clearDropClasses();removeDropGap();dragSrcIsStack=false;});
+
+  div.addEventListener('dragover',e=>{
+    e.preventDefault();
+    const rect = div.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const w = rect.width;
+    const zone = x / w;
+    const targetIsStack = (c.children||[]).length > 0 && drillStack.length === 0;
+
+    // Allow stacking onto any card — only block if SOURCE is a stack
+    if(zone > 0.25 && zone < 0.75 && !dragSrcIsStack) {
+      // Center zone = stack — only update if not already showing stack
+      if(!div.classList.contains('drop-stack')) {
+        clearDropClasses();
+        removeDropGap();
+        div.classList.add('drop-stack');
+      }
+    } else {
+      // Left/right zone = insert gap
+      if(div.classList.contains('drop-stack')) {
+        div.classList.remove('drop-stack');
+      }
+      const insertBefore = zone <= 0.5;
+      const existingGap = document.getElementById('active-drop-gap');
+      const existingPos = existingGap ? existingGap.dataset.position : null;
+      const existingTarget = existingGap ? existingGap.dataset.targetId : null;
+      // Only rebuild gap if position changed
+      if(!existingGap || existingPos !== (insertBefore?'before':'after') || existingTarget !== c.id) {
+        clearDropClasses();
+        removeDropGap();
+        const parent = div.closest('.board,.card-children-inline');
+        if(parent) {
+          const gap = document.createElement('div');
+          gap.className = 'drop-gap';
+          gap.id = 'active-drop-gap';
+          gap.dataset.targetId = c.id;
+          gap.dataset.position = insertBefore ? 'before' : 'after';
+          const anchor = div.closest('.card-stack-wrap') || div;
+          if(insertBefore) anchor.parentNode.insertBefore(gap, anchor);
+          else {
+            const next = anchor.nextSibling;
+            if(next) anchor.parentNode.insertBefore(gap, next);
+            else anchor.parentNode.appendChild(gap);
+          }
+        }
+      }
+    }
+  });
+
+  div.addEventListener('dragleave', e=>{
+    if(!e.relatedTarget || !e.relatedTarget.closest('.board,.card-children-inline')) {
+      clearDropClasses();
+    }
+  });
+
   div.addEventListener('drop',e=>{
-    e.preventDefault(); div.classList.remove('drag-over');
+    e.preventDefault();
+    const wasStack = div.classList.contains('drop-stack');
+    clearDropClasses();
+    const gap = document.getElementById('active-drop-gap');
+    const targetId = gap ? gap.dataset.targetId : c.id;
+    const position = gap ? gap.dataset.position : 'after';
+    removeDropGap();
     if(!dragSrcId||dragSrcId===c.id) return;
     const proj=activeProject(); if(!proj) return;
 
+    // STACK: drop onto center — block if source is a stack
+    if(wasStack && drillStack.length === 0) {
+      if(dragSrcIsStack) { showToast("Can't stack a group inside another card"); return; }
+      const srcIdx = proj.cards.findIndex(x=>x.id===dragSrcId);
+      if(srcIdx !== -1) {
+        const dstCard = c;
+        pushUndo();
+        const wasNewStack = (dstCard.children||[]).length === 0; // true if this is the first child
+        const [moved] = proj.cards.splice(srcIdx, 1);
+        if(!dstCard.children) dstCard.children = [];
+        dstCard.children.push(moved);
+        // Give the stack a chapterTitle if it doesn't have one
+        if(!dstCard.chapterTitle) dstCard.chapterTitle = dstCard.title;
+        // Apply same chapterTitle to child
+        moved.chapterTitle = dstCard.chapterTitle;
+        document.getElementById('sort-select').value='manual';
+        saveState(); renderBoard();
+        // Only prompt to name the chapter when creating a brand new stack
+        if(wasNewStack) {
+          setTimeout(()=>openChapterTitlePrompt(dstCard.id), 300);
+        } else {
+          showToast('Card added to stack');
+        }
+      }
+      return;
+    }
+
+    // REORDER — if dragging a stack, move parent + children as a unit
+    pushUndo();
     if (drillStack.length > 0) {
-      // In drill view: reorder freely
       const flat = currentCards();
       const si=flat.findIndex(x=>x.id===dragSrcId);
-      const di=flat.findIndex(x=>x.id===c.id);
+      const di=flat.findIndex(x=>x.id===targetId);
       if(si===-1||di===-1) return;
-      const [moved]=flat.splice(si,1); flat.splice(di,0,moved);
+      const [moved]=flat.splice(si,1);
+      const newDi=flat.findIndex(x=>x.id===targetId);
+      flat.splice(position==='after'?newDi+1:newDi,0,moved);
       flat.forEach((x,i)=>x.order=i);
       commitFlatOrder(flat);
     } else {
-      // Root board: check if dragging uncategorized into categorized position
       const srcCard = findCardAnywhere(proj.cards, dragSrcId);
       const dstCard = c;
-      const srcCat = isCategorized(srcCard);
-      const dstCat = isCategorized(dstCard);
-
-      if (!srcCat && dstCat) {
-        // Trying to drag uncategorized before a categorized card — warn them
-        showDragWarning(dragSrcId);
-        return;
-      }
-
+      if(!isCategorized(srcCard) && isCategorized(dstCard)){showDragWarning(dragSrcId);return;}
       const cc = proj.cards;
-      const si=cc.findIndex(x=>x.id===dragSrcId), di=cc.findIndex(x=>x.id===c.id);
+      const si=cc.findIndex(x=>x.id===dragSrcId);
+      const di=cc.findIndex(x=>x.id===targetId);
       if(si===-1||di===-1) return;
-      const [moved]=cc.splice(si,1); cc.splice(di,0,moved);
+      // Move the card (with all its children intact) as one unit
+      const [moved]=cc.splice(si,1);
+      const newDi=cc.findIndex(x=>x.id===targetId);
+      cc.splice(position==='after'?newDi+1:newDi,0,moved);
       cc.forEach((x,i)=>x.order=i);
+
+      // If dragging a stack, check if act changed vs neighbours
+      if(dragSrcIsStack) {
+        const srcAct = splitActChapter(moved.chapter||'').act;
+        // Look at surrounding cards to detect destination act
+        const movedIdx = cc.findIndex(x=>x.id===moved.id);
+        const neighbour = cc[movedIdx+1] || cc[movedIdx-1];
+        const destAct = neighbour ? splitActChapter(neighbour.chapter||'').act : null;
+        if(destAct && destAct !== srcAct) {
+          saveState(); renderBoard();
+          setTimeout(()=>openRelabelActModal(moved.id, srcAct, destAct), 200);
+          return;
+        }
+      }
     }
     document.getElementById('sort-select').value='manual';
     saveState(); renderBoard();
   });
+
+  // If this card has stacked children, wrap it with shadow layers
+  if(childCount > 0 && drillStack.length === 0) {
+    div.classList.add('stacked-top');
+    div.title = 'Drag to move entire stack';
+    const wrap = document.createElement('div');
+    wrap.className = 'card-stack-wrap';
+    wrap.style.cursor = 'grab';
+    if(childCount >= 2) {
+      const s2 = document.createElement('div');
+      s2.className = 'card-stack-shadow card-stack-shadow-2';
+      s2.style.background = (COLORS[c.color]||'#ccc');
+      s2.style.opacity = '0.5';
+      wrap.appendChild(s2);
+    }
+    const s1 = document.createElement('div');
+    s1.className = 'card-stack-shadow card-stack-shadow-1';
+    s1.style.background = (COLORS[c.color]||'#ccc');
+    s1.style.opacity = '0.7';
+    wrap.appendChild(s1);
+    wrap.appendChild(div);
+    // No separate count badge — chapter title badge on card handles it
+    return wrap;
+  }
+
   return div;
 }
 
 /* =======================================
-   CHAPTER VIEW (board + inline beats)
+   BEATS VIEW
 ======================================= */
+function renderBeatsView() {
+  const proj = activeProject(); if (!proj) return;
+  const container = document.getElementById('view-beats');
+  container.innerHTML = '';
+
+  // Get all categorized chapters in board order
+  const chNumMap = buildChapterNumberMap(proj);
+  const chapters = []; // [{ch, cards, num, title}]
+  const seen = [];
+  proj.cards.forEach(c => {
+    if(!isCategorized(c)) return;
+    if(!seen.includes(c.chapter)) {
+      seen.push(c.chapter);
+      const num = chNumMap[c.chapter] ? chNumMap[c.chapter].chNum : seen.length;
+      const chTitle = c.chapterTitle || stripChPrefix(c.title||'');
+      const allCards = [c, ...(c.children||[])];
+      chapters.push({ch: c.chapter, cards: allCards, num, title: chTitle, parentId: c.id});
+    }
+  });
+
+  if(chapters.length === 0) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-family:\'Courier New\',monospace;font-size:0.8rem;">No chapters yet. Add cards with an Act on the Board first.</div>';
+    return;
+  }
+
+  // Determine current chapter from drillStack or default to first
+  let currentCh = chapters[0];
+  if(drillStack.length > 0) {
+    const parentId = drillStack[drillStack.length-1].cardId;
+    const found = chapters.find(c => c.parentId === parentId);
+    if(found) currentCh = found;
+  } else {
+    // Auto-drill into first chapter
+    const firstCard = findCardAnywhere(proj.cards, chapters[0].parentId);
+    if(firstCard) {
+      drillStack = [{cardId: firstCard.id, title: firstCard.title}];
+      renderBreadcrumb();
+      currentCh = chapters[0];
+    }
+  }
+
+  // ── GO TO navigator bar
+  const navBar = document.createElement('div');
+  navBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 20px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;';
+
+  const goLabel = document.createElement('span');
+  goLabel.style.cssText = 'font-family:"Courier New",monospace;font-size:0.65rem;color:var(--muted);flex-shrink:0;text-transform:uppercase;letter-spacing:0.08em;';
+  goLabel.textContent = 'GO TO:';
+  navBar.appendChild(goLabel);
+
+  // Chapter number dropdown
+  const numSel = document.createElement('select');
+  numSel.style.cssText = 'background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:"Courier New",monospace;font-size:0.72rem;padding:4px 8px;outline:none;cursor:pointer;min-width:80px;';
+  chapters.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.parentId;
+    opt.textContent = 'CH ' + c.num;
+    opt.selected = c.parentId === currentCh.parentId;
+    numSel.appendChild(opt);
+  });
+
+  // Chapter name display (auto-updates with dropdown)
+  const nameDisplay = document.createElement('span');
+  nameDisplay.style.cssText = 'font-family:Georgia,serif;font-size:0.9rem;color:var(--accent);flex:1;';
+  nameDisplay.textContent = '— ' + currentCh.title;
+
+  // Left/right arrows
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'btn ghost';
+  prevBtn.style.cssText = 'padding:4px 10px;font-size:0.8rem;flex-shrink:0;';
+  prevBtn.textContent = '←';
+  prevBtn.title = 'Previous chapter';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn ghost';
+  nextBtn.style.cssText = 'padding:4px 10px;font-size:0.8rem;flex-shrink:0;';
+  nextBtn.textContent = '→';
+  nextBtn.title = 'Next chapter';
+
+  function goToChapter(parentId) {
+    const found = chapters.find(c => c.parentId === parentId);
+    if(!found) return;
+    const card = findCardAnywhere(proj.cards, parentId);
+    if(!card) return;
+    drillStack = [{cardId: parentId, title: card.title}];
+    saveState();
+    renderBreadcrumb();
+    renderBeatsView();
+  }
+
+  numSel.onchange = () => {
+    nameDisplay.textContent = '— ' + (chapters.find(c=>c.parentId===numSel.value)?.title||'');
+    goToChapter(numSel.value);
+  };
+
+  const curIdx = chapters.findIndex(c => c.parentId === currentCh.parentId);
+  prevBtn.onclick = () => { if(curIdx > 0) goToChapter(chapters[curIdx-1].parentId); };
+  nextBtn.onclick = () => { if(curIdx < chapters.length-1) goToChapter(chapters[curIdx+1].parentId); };
+  prevBtn.disabled = curIdx === 0;
+  nextBtn.disabled = curIdx === chapters.length-1;
+  if(prevBtn.disabled) prevBtn.style.opacity='0.3';
+  if(nextBtn.disabled) nextBtn.style.opacity='0.3';
+
+  navBar.appendChild(prevBtn);
+  navBar.appendChild(numSel);
+  navBar.appendChild(nameDisplay);
+  navBar.appendChild(nextBtn);
+  container.appendChild(navBar);
+
+  // ── Beat cards for current chapter
+  const boardWrap = document.createElement('div');
+  boardWrap.style.cssText = 'flex:1;overflow-y:auto;';
+  const grid = document.createElement('div');
+  grid.className = 'board';
+  grid.style.flex = '1';
+
+  currentCh.cards.forEach(c => {
+    const el = makeCard(c, '');
+    grid.appendChild(el);
+  });
+
+  // Add card button
+  const addBtn = document.createElement('div');
+  addBtn.className = 'card-add';
+  addBtn.innerHTML = '<span class="plus">+</span><span>Add card</span>';
+  addBtn.onclick = () => openCardModal();
+  grid.appendChild(addBtn);
+
+  boardWrap.appendChild(grid);
+  container.appendChild(boardWrap);
+}
 
 
 /* =======================================
@@ -1975,22 +2350,11 @@ function renderChaptersView() {
   const container = document.getElementById('view-chapters');
   container.innerHTML = '';
 
-  // Get all categorized cards grouped by chapter in order
+  const sorted = [...proj.cards].sort((a,b) => a.order - b.order);
   const allCards = [];
-  const sorted = [...proj.cards].sort((a,b)=>{
-    const aCat=isCategorized(a),bCat=isCategorized(b);
-    if(aCat!==bCat) return aCat?-1:1;
-    const {act:aA,chapter:aC}=splitActChapter(a.chapter||'');
-    const {act:bA,chapter:bC}=splitActChapter(b.chapter||'');
-    const n=s=>parseInt((s||'').match(/\d+/)?.[0]||'0');
-    if(n(aA)!==n(bA)) return n(aA)-n(bA);
-    if(n(aC)!==n(bC)) return n(aC)-n(bC);
-    return a.order-b.order;
-  });
   sorted.forEach(c=>{ allCards.push(c); (c.children||[]).forEach(ch=>allCards.push(ch)); });
   const categorized = allCards.filter(c=>isCategorized(c));
 
-  // Group by chapter
   const seenCh = [];
   const groups = [];
   categorized.forEach(c=>{
@@ -2001,109 +2365,56 @@ function renderChaptersView() {
   if(groups.length===0){
     const empty=document.createElement('div');
     empty.style.cssText='padding:40px;text-align:center;color:var(--muted);font-family:"Courier New",monospace;font-size:0.8rem;';
-    empty.innerHTML='No chapters yet. Add Act and Chapter to your cards on the Board.';
+    empty.innerHTML='No chapters yet. Add Act to your cards on the Board.';
     container.appendChild(empty);
     return;
   }
 
   const inner = document.createElement('div');
   inner.style.cssText = 'padding:20px;display:flex;flex-direction:column;gap:24px;';
+  const chNumMap = buildChapterNumberMap(proj);
 
   groups.forEach(({ch, cards})=>{
-    const {act,chapter}=splitActChapter(ch);
-    // Default working title = first card's title if none explicitly set
-    const workingTitle = proj.chapterTitles[ch] !== undefined
-      ? proj.chapterTitles[ch]
-      : (cards[0]?.title || '');
-
-    // Chapter section wrapper
+    const {act} = splitActChapter(ch);
+    const autoNum = chNumMap[ch] ? chNumMap[ch].chNum : null;
+    // Chapter title: use chapterTitle of first card, or stored working title
+    const firstCard = cards[0];
+    const chapterTitle = firstCard ? (firstCard.chapterTitle || stripChPrefix(firstCard.title||'')) : ch;
     const section = document.createElement('div');
-
-    // ── Chapter header row
     const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px;flex-wrap:wrap;';
+    header.style.cssText = 'display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:12px;';
 
-    // Act + Chapter label
-    const chLabel = document.createElement('span');
-    chLabel.style.cssText = 'font-family:"Courier New",monospace;font-size:0.7rem;color:var(--muted);flex-shrink:0;';
-    chLabel.textContent = act && chapter ? act+' › '+chapter : ch;
-    header.appendChild(chLabel);
+    const titleEl = document.createElement('span');
+    titleEl.style.cssText = 'font-family:Georgia,serif;font-size:1.15rem;color:var(--accent);flex:1;font-weight:normal;';
+    titleEl.textContent = (act ? act+' › ' : '') + (autoNum ? 'CH '+autoNum+' — ' : '') + stripChPrefix(chapterTitle||'');
 
-    // Working title display/edit
-    const titleWrap = document.createElement('div');
-    titleWrap.style.cssText = 'display:flex;align-items:center;gap:6px;flex:1;min-width:180px;';
-
-    const titleDisplay = document.createElement('span');
-    titleDisplay.style.cssText = 'font-family:Georgia,serif;font-size:1rem;color:var(--accent);cursor:pointer;';
-    titleDisplay.textContent = workingTitle || cards[0]?.title || '+ Add working title';
-    titleDisplay.title = 'Click to edit working title';
-
-    const titleInput = document.createElement('input');
-    titleInput.type = 'text';
-    titleInput.value = workingTitle || (cards[0]?.title || '');
-    titleInput.placeholder = 'Working title…';
-    titleInput.autocomplete = 'off';
-    titleInput.style.cssText = 'display:none;flex:1;background:var(--bg);border:1px solid var(--accent);color:var(--text);font-family:Georgia,serif;font-size:1rem;padding:3px 8px;outline:none;';
-
-    // Toggle to edit mode
-    titleDisplay.onclick = () => {
-      titleDisplay.style.display = 'none';
-      titleInput.style.display = 'block';
-      titleInput.focus();
-      titleInput.select();
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn ghost';
+    editBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
+    editBtn.textContent = '✎ Edit Chapter';
+    editBtn.onclick = () => {
+      const firstCard = cards[0];
+      if(firstCard) openChapterEditModal(firstCard);
     };
 
-    // Save on blur or Enter
-    const saveTitle = () => {
-      const newTitle = titleInput.value.trim();
-      proj.chapterTitles[ch] = newTitle;
-      titleDisplay.textContent = newTitle || cards[0]?.title || '+ Add working title';
-      titleDisplay.style.display = '';
-      titleInput.style.display = 'none';
-      // Update title on ALL cards in this chapter
-      if (newTitle) {
-        let updated = 0;
-        function updateTitles(arr) {
-          arr.forEach(c => {
-            if (c.chapter === ch) { c.title = newTitle; updated++; }
-            if (c.children) updateTitles(c.children);
-          });
-        }
-        updateTitles(proj.cards);
-        showToast(`"${newTitle}" applied to ${updated} card${updated!==1?'s':''}`);
-      } else {
-        showToast('Chapter title saved');
-      }
-      saveState();
-      renderChaptersView(); // refresh to show updated card titles
-    };
-    titleInput.onblur = saveTitle;
-    titleInput.onkeydown = e => { if(e.key==='Enter') saveTitle(); if(e.key==='Escape'){titleInput.style.display='none';titleDisplay.style.display='';} };
-
-    titleWrap.appendChild(titleDisplay);
-    titleWrap.appendChild(titleInput);
-    header.appendChild(titleWrap);
-
-    // Card count
-    const countSpan = document.createElement('span');
-    countSpan.style.cssText = 'font-family:"Courier New",monospace;font-size:0.6rem;color:var(--muted);flex-shrink:0;';
-    countSpan.textContent = cards.length+' card'+(cards.length!==1?'s':'');
-    header.appendChild(countSpan);
-
-    // + Add Card button
     const addCardBtn = document.createElement('button');
     addCardBtn.className = 'btn ghost';
-    addCardBtn.style.cssText = 'font-size:0.65rem;padding:3px 10px;flex-shrink:0;';
+    addCardBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
     addCardBtn.textContent = '+ Add Card';
-    addCardBtn.onclick = () => openCardModalForChapter(ch, cards);
-    header.appendChild(addCardBtn);
+    addCardBtn.onclick = () => openCardModalForChapter(ch, cards, chapterTitle);
 
+    header.appendChild(titleEl);
+    header.appendChild(editBtn);
+    header.appendChild(addCardBtn);
     section.appendChild(header);
 
-    // ── Cards grid
+    // ── Cards grid — use makeCard for drag support, hide badge (header covers it)
     const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;';
-    cards.forEach((c,i)=>{ grid.appendChild(makeCard(c,'',i+1)); });
+    grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;';
+    cards.forEach(c=>{
+      const el = makeCard(c, '');
+      grid.appendChild(el);
+    });
     section.appendChild(grid);
     inner.appendChild(section);
   });
@@ -2111,32 +2422,25 @@ function renderChaptersView() {
   container.appendChild(inner);
 }
 
-function openCardModalForChapter(ch, chapterCards) {
+function openCardModalForChapter(ch, chapterCards, chapterTitle) {
   const proj = activeProject(); if (!proj) return;
+  // Store the chapter info so saveCard can use it
   openCardModal();
   setTimeout(() => {
-    const {act, chapter} = splitActChapter(ch);
+    const {act} = splitActChapter(ch);
     setActField(act);
-    const chDisp = /^Chapter\s+(\d+)$/i.test(chapter) ? chapter.match(/\d+/)[0] : chapter;
-    document.getElementById('card-chapter-input').value = chDisp;
-    // Pre-fill title with working title (or first card's title as fallback)
-    const workingTitle = (proj.chapterTitles && proj.chapterTitles[ch] !== undefined)
-      ? proj.chapterTitles[ch]
-      : (chapterCards[0]?.title || '');
-    if (workingTitle) {
-      document.getElementById('card-title-input').value = workingTitle;
-      setTimeout(() => {
-        const ti = document.getElementById('card-title-input');
-        ti.focus(); ti.select();
-      }, 10);
-    }
-    // Inherit characters from first card in chapter
+    // Pre-fill title hint
+    document.getElementById('card-title-input').value = '';
+    document.getElementById('card-title-input').placeholder = 'Beat title…';
+    // Store chapter context for saveCard
+    document.getElementById('card-chapter-input').value = ch;
+    // Inherit characters and color from first card
     if(chapterCards.length > 0) {
       selectedCharIds = [...(chapterCards[0].characters||[])];
       renderSelectedChars();
+      setCardColor(chapterCards[0].color||'white');
     }
-    // Inherit color from first card
-    if(chapterCards.length > 0) setCardColor(chapterCards[0].color||'white');
+    setTimeout(()=>{ document.getElementById('card-title-input').focus(); }, 10);
   }, 60);
 }
 
@@ -2147,18 +2451,13 @@ function renderActs() {
   // Group by chapter/act - show full label as column header
   const groups={};
   const order=[];
-  // Include all cards (root + children), categorized first, Ideas last
+  // Include all cards (root + children) — sort by board order
   const allActCards = getAllCards(proj.cards);
-  // Sort cards properly before grouping
-  allActCards.sort((a,b)=>{
+  // Sort by board order only — board position IS the chapter order
+  allActCards.sort((a,b) => {
     const aCat=isCategorized(a), bCat=isCategorized(b);
     if(aCat!==bCat) return aCat?-1:1;
-    const {act:aA,chapter:aC}=splitActChapter(a.chapter||'');
-    const {act:bA,chapter:bC}=splitActChapter(b.chapter||'');
-    const n=s=>parseInt((s||'').match(/\d+/)?.[0]||'0');
-    if(n(aA)!==n(bA)) return n(aA)-n(bA);
-    if(n(aC)!==n(bC)) return n(aC)-n(bC);
-    return a.order-b.order;
+    return a.order - b.order;
   });
   allActCards.forEach(c=>{
     const key = isCategorized(c) ? c.chapter : '~~ideas~~';
@@ -2166,30 +2465,33 @@ function renderActs() {
     groups[key].push(c);
   });
 
-  // Sort columns: categorized first (Prologue, Act1Ch1, Act1Ch2..., Epilogue), Ideas last
+  // Keep columns in the order they first appear on the board (ideas last)
   order.sort((a,b)=>{
     if(a==='~~ideas~~') return 1;
     if(b==='~~ideas~~') return -1;
-    const rank = s => {
-      if(!s) return 99999;
-      if(s.toLowerCase().startsWith('prologue')) return 0;
-      if(s.toLowerCase().startsWith('epilogue')) return 90000;
-      const actM = s.match(/Act\s*(\d+)/i);
-      const actNum = actM ? parseInt(actM[1]) : 500;
-      const chapM = s.match(/Chapter\s*(\d+)/i);
-      const chapNum = chapM ? parseInt(chapM[1]) : 0;
-      return actNum * 1000 + chapNum;
-    };
-    const ra=rank(a), rb=rank(b);
-    if(ra!==rb) return ra-rb;
-    return a.localeCompare(b);
+    return 0; // preserve board order
   });
   if(!order.length){order.push('~~ideas~~');groups['~~ideas~~']=[];}
+
+  const chNumMap = buildChapterNumberMap(proj);
 
   order.forEach(act=>{
     const col=document.createElement('div'); col.className='act-col';
     const cards=groups[act]||[];
-    const colTitle = act==='~~ideas~~' ? 'Ideas' : act;
+    // Build column title with auto chapter number
+    let colTitle;
+    if(act==='~~ideas~~') {
+      colTitle = 'Ideas';
+    } else {
+      const {act:actPart, chapter:chapPart} = splitActChapter(act);
+      const autoNum = chNumMap[act] ? chNumMap[act].chNum : null;
+      const parentTitle = cards[0] ? stripChPrefix(cards[0].title||'') : '';
+      if(actPart && autoNum) {
+        colTitle = actPart + ' › CH ' + autoNum + (parentTitle ? ' — ' + parentTitle : '');
+      } else {
+        colTitle = act;
+      }
+    }
     col.innerHTML=`<div class="act-header"><div class="act-header-title">${esc(colTitle)}</div><div class="act-header-count">${cards.length} card${cards.length!==1?'s':''}</div></div>`;
     cards.forEach(c=>{
       const bg=COLORS[c.color]||'#ccc';
@@ -2202,7 +2504,7 @@ function renderActs() {
     });
     const addDiv=document.createElement('div'); addDiv.className='act-add';
     addDiv.textContent='+ Add card to '+(act==='~~ideas~~'?'Ideas':act);
-    addDiv.onclick=()=>{openCardModal();if(act!=='~~ideas~~'){setTimeout(()=>{const {act:a,chapter:ch}=splitActChapter(act);setActField(a);document.getElementById('card-chapter-input').value=ch;},60);}};
+    addDiv.onclick=()=>{openCardModal();if(act!=='~~ideas~~'){setTimeout(()=>{const {act:a}=splitActChapter(act);setActField(a);},60);}};
     col.appendChild(addDiv);
     row.appendChild(col);
   });
@@ -2335,19 +2637,31 @@ function drillInto(cardId) {
   if (!card.children) card.children = [];
   drillStack.push({cardId, title: card.title});
   saveState();
-  // Always stay on Board tab — breadcrumb handles navigation context
-  document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t.dataset.view==='board'));
-  currentView = 'board';
+  // Switch to Beats tab and highlight it
+  currentView = 'beats';
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t.dataset.view==='beats'));
+  document.getElementById('view-board').style.display = 'none';
+  document.getElementById('view-beats').style.display = 'flex';
+  document.getElementById('toolbar-bar').style.display = 'none';
   renderBreadcrumb();
-  renderBoard();
+  renderBeatsView();
 }
 
 function drillUp(depth) {
-  // Go back exactly one level
   if (drillStack.length > 0) drillStack.pop();
   saveState();
   renderBreadcrumb();
-  renderBoard();
+  if(drillStack.length === 0) {
+    // Return to board
+    currentView = 'board';
+    document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active', t.dataset.view==='board'));
+    document.getElementById('view-beats').style.display = 'none';
+    document.getElementById('view-board').style.display = 'flex';
+    document.getElementById('toolbar-bar').style.display = 'flex';
+    renderBoard();
+  } else {
+    renderBeatsView();
+  }
 }
 
 function currentCards() {
@@ -2453,40 +2767,48 @@ function renderBreadcrumb() {
     return;
   }
   bar.style.display = 'flex';
+  bar.style.flexDirection = 'row';
+  bar.style.alignItems = 'center';
+  bar.style.gap = '12px';
+  bar.style.padding = '10px 20px';
   bar.innerHTML = '';
 
-  // Back button
+  // Back button (small, left)
   const back = document.createElement('button');
   back.className = 'breadcrumb-back';
-  back.textContent = '← Back to Board';
+  back.textContent = '←';
+  back.title = 'Back to Board';
   back.onclick = () => drillUp(0);
   bar.appendChild(back);
 
-  // Root crumb
-  const root = document.createElement('span');
-  root.className = 'breadcrumb-item';
-  root.textContent = proj.name;
-  root.onclick = () => drillUp(0);
-  bar.appendChild(root);
+  // Chapter Title — gold, large, flush left
+  const frame = drillStack[drillStack.length - 1];
+  const parentCard = frame ? findCardAnywhere(proj.cards, frame.cardId) : null;
+  if(parentCard) {
+    const chNumMap = buildChapterNumberMap(proj);
+    const autoNum = chNumMap[parentCard.chapter] ? chNumMap[parentCard.chapter].chNum : null;
+    const {act} = splitActChapter(parentCard.chapter||'');
+    const chTitle = parentCard.chapterTitle || stripChPrefix(parentCard.title||'');
 
-  // Show only the current chapter name — single level
-  const frame = drillStack.length > 0 ? drillStack[drillStack.length - 1] : null;
-  if (frame && frame.title !== undefined) {
-    const sep = document.createElement('span');
-    sep.className = 'breadcrumb-sep'; sep.textContent = '›';
-    bar.appendChild(sep);
-    const crumb = document.createElement('span');
-    crumb.className = 'breadcrumb-item current';
-    crumb.textContent = frame.title || '(untitled)';
-    bar.appendChild(crumb);
+    const titleEl = document.createElement('span');
+    titleEl.style.cssText = 'font-family:Georgia,serif;font-size:1.15rem;color:var(--accent);flex:1;font-weight:normal;';
+    titleEl.textContent = (act ? act+' › ' : '') + (autoNum ? 'CH '+autoNum+' — ' : '') + chTitle;
+    bar.appendChild(titleEl);
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn ghost';
+    editBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
+    editBtn.textContent = '✎ Edit Chapter';
+    editBtn.onclick = () => openChapterEditModal(parentCard);
+    bar.appendChild(editBtn);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn ghost';
+    addBtn.style.cssText = 'font-size:0.65rem;padding:4px 12px;flex-shrink:0;';
+    addBtn.textContent = '+ Add Card';
+    addBtn.onclick = () => openCardModal();
+    bar.appendChild(addBtn);
   }
-
-  // Scene count
-  const cards = currentCards();
-  const info = document.createElement('span');
-  info.style.cssText = 'margin-left:auto;font-size:0.6rem;color:var(--muted)';
-  info.textContent = cards.length + ' beat' + (cards.length!==1?'s':'');
-  bar.appendChild(info);
 }
 
 /* =======================================
@@ -2545,41 +2867,8 @@ document.getElementById('card-act-input').addEventListener('change', function() 
 });
 
 // Chapter typeahead - suggests chapters already used in this project
-function chapterTypeaheadInput() {
-  const proj = activeProject(); if (!proj) return;
-  const q = document.getElementById('card-chapter-input').value.trim().toLowerCase();
-  const dropdown = document.getElementById('chapter-dropdown');
-  dropdown.innerHTML = '';
-
-  // Collect unique chapter values already used
-  const usedChapters = [...new Set(
-    proj.cards
-      .map(c => splitActChapter(c.chapter||'').chapter)
-      .filter(ch => ch && (!q || ch.toLowerCase().includes(q)))
-  )].sort();
-
-  usedChapters.forEach(ch => {
-    const item = document.createElement('div');
-    item.className = 'chapter-drop-item';
-    item.textContent = ch;
-    item.onclick = () => {
-      document.getElementById('card-chapter-input').value = ch;
-      dropdown.classList.remove('open');
-    };
-    dropdown.appendChild(item);
-  });
-
-  dropdown.classList.toggle('open', usedChapters.length > 0);
-}
-
-function chapterTypeaheadKey(e) {
-  const dropdown = document.getElementById('chapter-dropdown');
-  if (e.key === 'Escape') { dropdown.classList.remove('open'); return; }
-  if (e.key === 'Enter') {
-    const first = dropdown.querySelector('.chapter-drop-item');
-    if (first) { e.preventDefault(); first.click(); }
-  }
-}
+function chapterTypeaheadInput() { /* chapter field removed */ }
+function chapterTypeaheadKey(e) { /* chapter field removed */ }
 
 document.addEventListener('click', e => {
   const wrap = document.querySelector('.chapter-typeahead');
@@ -2685,16 +2974,10 @@ function exportHtml() {
 
   // Build flat ordered list matching board order (chapter sorted, beats under parents)
   const allCards = [];
-  const sorted = [...proj.cards];
-  sorted.sort((a,b)=>{
+  const sorted = [...proj.cards].sort((a,b) => {
     const aCat=isCategorized(a),bCat=isCategorized(b);
     if(aCat!==bCat) return aCat?-1:1;
-    const {act:aA,chapter:aC}=splitActChapter(a.chapter||'');
-    const {act:bA,chapter:bC}=splitActChapter(b.chapter||'');
-    const n=s=>parseInt((s||'').match(/\d+/)?.[0]||'0');
-    if(n(aA)!==n(bA)) return n(aA)-n(bA);
-    if(n(aC)!==n(bC)) return n(aC)-n(bC);
-    return a.order-b.order;
+    return a.order - b.order; // board order is the truth
   });
   sorted.forEach(c=>{ allCards.push({...c,isChild:false}); (c.children||[]).forEach(ch=>allCards.push({...ch,isChild:true})); });
 
@@ -2723,9 +3006,14 @@ h2{font-size:1rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.08e
 </style></head><body>
 <h1>${proj.name}</h1>${proj.desc?'<div class="logline">'+proj.desc+'</div>':''}`;
 
+  const chNumMap = buildChapterNumberMap(proj);
+
   chapterGroups.forEach(({ch,cards})=>{
     const {act,chapter}=splitActChapter(ch);
-    const heading = act&&chapter ? act+' › '+chapter : ch;
+    const autoNum = chNumMap[ch] ? chNumMap[ch].chNum : null;
+    const parentTitle = cards[0] ? stripChPrefix(cards[0].title||'') : '';
+    const chLabel = autoNum ? 'CH '+autoNum+(parentTitle?' — '+parentTitle:'') : (chapter||ch);
+    const heading = act ? act+' › '+chLabel : chLabel;
     html+=`<h2>${heading}</h2>`;
     cards.forEach(c=>{
       const bg=CARD_BG[c.color]||'#f0f0f0';
@@ -2817,11 +3105,12 @@ function updateAutosaveUI(status) {
 }
 
 async function setupAutosave() {
-  // Check if File System Access API is available (desktop browsers only)
+  // Check if File System Access API is available
   if (!window.showSaveFilePicker) {
-    showToast('File System Access not available in this view - use the desktop file');
+    showToast('Autosave requires Chrome or Brave — open this file in one of those browsers');
     return;
   }
+  // Brave/Chrome may block this if not triggered by user gesture — this click IS a user gesture so it should work
   try {
     const d = new Date();
     const projName = activeProject() ? activeProject().name.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') : 'storyboard';
@@ -2979,7 +3268,15 @@ function showToast(msg) {
    KEYBOARD
 ======================================= */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeCardModal();closeProjModal();closeCharModal();closeMoveModal();closeScratchpad();}
+  if(e.key==='Escape'){closeCardModal();closeProjModal();closeCharModal();closeMoveModal();closeScratchpad();closeChapterTitlePrompt();closeChapterEditModal();}
+  if((e.metaKey||e.ctrlKey)&&e.key==='z'){
+    // Only intercept undo when not typing in a text field
+    const tag = document.activeElement.tagName;
+    const isEditable = document.activeElement.contentEditable === 'true';
+    if(tag !== 'INPUT' && tag !== 'TEXTAREA' && !isEditable) {
+      e.preventDefault(); undo();
+    }
+  }
   if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();openCardModal();}
   if((e.metaKey||e.ctrlKey)&&e.key==='f'){e.preventDefault();document.getElementById('search-input').focus();}
   const editor=document.getElementById('card-body-input');
@@ -2996,10 +3293,21 @@ document.addEventListener('keydown',e=>{
 function isCategorized(c) {
   if (!c.chapter || c.chapter.trim() === '') return false;
   const {act, chapter} = splitActChapter(c.chapter);
-  return !!(act && chapter);
+  // Accept if has an act OR a chapter (not just empty string)
+  return !!(act || chapter);
 }
 
 function esc(str){return(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function abbrevChapter(chapter) {
+  if(!chapter) return '';
+  const {act, chapter:chap} = splitActChapter(chapter);
+  // On cards: show only the Act (chapter number is auto-generated in views)
+  if(act) return esc(act.replace(/^act\s+/i,'ACT ').replace(/^chapter\s+/i,'CH '));
+  // If no act, show abbreviated chapter
+  if(chap) return esc(chap.replace(/^chapter\s+/i,'CH ').replace(/^act\s+/i,'ACT '));
+  return esc(chapter);
+}
 
 /* =======================================
    MIGRATE OLD DATA
@@ -3019,14 +3327,270 @@ function esc(str){return(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
     }
   }
   // Ensure all projects have new fields
-  state.projects.forEach(p=>{if(!p.characters)p.characters=[];if(!p.flagLabels)p.flagLabels={};});
+  state.projects.forEach(p=>{
+    if(!p.characters)p.characters=[];
+    if(!p.flagLabels)p.flagLabels={};
+    // Migrate: add chapterTitle to cards that don't have it
+    function migrateCards(cards) {
+      cards.forEach(c => {
+        if(!c.chapterTitle) {
+          // Use stripped title as chapter title (removes "CH N —" prefix)
+          c.chapterTitle = stripChPrefix(c.title||'') || c.title || '';
+        }
+        if(c.children) migrateCards(c.children);
+      });
+    }
+    migrateCards(p.cards||[]);
+  });
 })();
 
 renderSidebar();
 renderProjectView();
 function ipadOpen(){document.querySelector('.sidebar').classList.add('ipad-open');document.getElementById('ipad-dim').classList.add('on');}
 function ipadClose(){document.querySelector('.sidebar').classList.remove('ipad-open');document.getElementById('ipad-dim').classList.remove('on');}
-document.addEventListener('click',function(e){if(e.target.closest('.project-item'))setTimeout(ipadClose,200);});
+document.addEventListener('click',function(e){
+  if(e.target.closest('.project-item'))setTimeout(ipadClose,200);
+  // Chapter edit color swatches
+  if(e.target.closest('.ch-edit-color')){
+    document.querySelectorAll('.ch-edit-color').forEach(el=>el.classList.remove('active'));
+    e.target.closest('.ch-edit-color').classList.add('active');
+  }
+});
+function chEditCharSearch(q){ /* simple stub — can enhance later */ }
+function chEditCharKey(e){ if(e.key==='Enter'){ e.preventDefault(); } }
+
+/* =======================================
+   CHAPTER EDIT MODAL
+======================================= */
+let chEditCardId = null;
+
+function openChapterEditModal(card) {
+  chEditCardId = card.id;
+  const proj = activeProject(); if(!proj) return;
+  // Pre-fill fields
+  document.getElementById('ch-edit-title').value = card.chapterTitle || stripChPrefix(card.title||'') || '';
+  const {act} = splitActChapter(card.chapter||'');
+  // Set act dropdown
+  const sel = document.getElementById('ch-edit-act');
+  const stdOpts = ['','Act 1','Act 2','Act 3','Prologue','Epilogue'];
+  sel.value = stdOpts.includes(act) ? act : '';
+  // Set color swatches
+  document.querySelectorAll('.ch-edit-color').forEach(el => el.classList.toggle('active', el.dataset.color === card.color));
+  // Set characters
+  chEditCharIds = [...(card.characters||[])];
+  renderChEditChars();
+  document.getElementById('ch-edit-overlay').classList.add('open');
+  setTimeout(()=>{ document.getElementById('ch-edit-title').focus(); document.getElementById('ch-edit-title').select(); }, 50);
+}
+
+function closeChapterEditModal() {
+  document.getElementById('ch-edit-overlay').classList.remove('open');
+  chEditCardId = null;
+}
+
+let chEditCharIds = [];
+
+function renderChEditChars() {
+  const proj = activeProject(); if(!proj) return;
+  const wrap = document.getElementById('ch-edit-char-tags');
+  wrap.innerHTML = chEditCharIds.map(id=>{
+    const ch=(proj.characters||[]).find(x=>x.id===id);
+    return ch?`<span class="char-tag">${esc(ch.name)}<button class="char-tag-remove" onclick="chEditCharIds=chEditCharIds.filter(x=>x!=='${id}');renderChEditChars()">×</button></span>`:'';
+  }).join('');
+}
+
+function applyChapterEdit() {
+  const proj = activeProject(); if(!proj) return;
+  const newTitle = document.getElementById('ch-edit-title').value.trim();
+  const newAct = document.getElementById('ch-edit-act').value;
+  const newColor = document.querySelector('.ch-edit-color.active')?.dataset.color;
+  const card = findCardAnywhere(proj.cards, chEditCardId); if(!card) return;
+  const {chapter: oldChap} = splitActChapter(card.chapter||'');
+  const newChapter = buildChapter(newAct, newTitle||oldChap||card.title);
+
+  // Apply to parent + all children
+  function applyToCard(c) {
+    if(newTitle) c.chapterTitle = newTitle;
+    if(newAct) c.chapter = buildChapter(newAct, c.chapterTitle||c.title);
+    if(newColor) c.color = newColor;
+    if(chEditCharIds.length > 0) c.characters = [...chEditCharIds];
+  }
+  applyToCard(card);
+  (card.children||[]).forEach(applyToCard);
+
+  saveState();
+  renderBreadcrumb();
+  renderBoard();
+  if(currentView==='chapters') renderChaptersView();
+  showToast('Chapter updated');
+  closeChapterEditModal();
+}
+
+/* =======================================
+   CHAPTER TITLE PROMPT (after stacking)
+======================================= */
+let chapterTitlePromptCardId = null;
+
+function openChapterTitlePrompt(cardId) {
+  chapterTitlePromptCardId = cardId;
+  const proj = activeProject(); if(!proj) return;
+  const card = findCardAnywhere(proj.cards, cardId); if(!card) return;
+  document.getElementById('ch-title-prompt-input').value = card.chapterTitle || stripChPrefix(card.title||'') || '';
+  document.getElementById('ch-title-prompt-overlay').classList.add('open');
+  setTimeout(()=>{
+    const inp = document.getElementById('ch-title-prompt-input');
+    inp.focus(); inp.select();
+  }, 50);
+}
+
+function saveChapterTitlePrompt() {
+  const proj = activeProject(); if(!proj) return;
+  const newTitle = document.getElementById('ch-title-prompt-input').value.trim();
+  if(newTitle && chapterTitlePromptCardId) {
+    const card = findCardAnywhere(proj.cards, chapterTitlePromptCardId);
+    if(card) {
+      card.chapterTitle = newTitle;
+      // Apply to all children too
+      (card.children||[]).forEach(c => c.chapterTitle = newTitle);
+      saveState(); renderBoard();
+      showToast(`Chapter title set to "${newTitle}"`);
+    }
+  }
+  document.getElementById('ch-title-prompt-overlay').classList.remove('open');
+  chapterTitlePromptCardId = null;
+}
+
+function closeChapterTitlePrompt() {
+  document.getElementById('ch-title-prompt-overlay').classList.remove('open');
+  chapterTitlePromptCardId = null;
+}
+let relabelCardId = null;
+
+function openRelabelActModal(cardId, fromAct, toAct) {
+  relabelCardId = cardId;
+  document.getElementById('relabel-from-act').textContent = fromAct || 'none';
+  document.getElementById('relabel-to-act').textContent = toAct || 'none';
+  // Pre-select the destination act
+  const sel = document.getElementById('relabel-act-select');
+  for(let i=0; i<sel.options.length; i++){
+    if(sel.options[i].value === toAct){ sel.selectedIndex=i; break; }
+  }
+  document.getElementById('relabel-act-overlay').classList.add('open');
+}
+
+function closeRelabelActModal() {
+  document.getElementById('relabel-act-overlay').classList.remove('open');
+  relabelCardId = null;
+}
+
+function applyRelabelAct() {
+  const proj = activeProject(); if(!proj) return;
+  const newAct = document.getElementById('relabel-act-select').value;
+  const card = findCardAnywhere(proj.cards, relabelCardId); if(!card) return;
+  // Update act for parent and all children
+  function updateAct(c) {
+    const {chapter} = splitActChapter(c.chapter||'');
+    c.chapter = buildChapter(newAct, chapter);
+    (c.children||[]).forEach(updateAct);
+  }
+  updateAct(card);
+  saveState(); renderBoard();
+  showToast('Act updated for all cards in group');
+  closeRelabelActModal();
+}
 </script>
+
+<!-- RELABEL ACT MODAL -->
+<div class="overlay" id="relabel-act-overlay">
+  <div class="modal" style="width:360px;max-width:96vw;gap:14px;">
+    <h2>Stack moved to new Act</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">
+      This group was in <strong id="relabel-from-act" style="color:var(--accent)"></strong> and dropped into <strong id="relabel-to-act" style="color:var(--accent)"></strong>. Update the Act label for all cards in this group?
+    </p>
+    <div class="field">
+      <label>New Act</label>
+      <select id="relabel-act-select">
+        <option value="">— No Act —</option>
+        <option value="Act 1">Act 1</option>
+        <option value="Act 2">Act 2</option>
+        <option value="Act 3">Act 3</option>
+        <option value="Prologue">Prologue</option>
+        <option value="Epilogue">Epilogue</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeRelabelActModal()">Skip</button>
+      <button class="btn" onclick="applyRelabelAct()">Update All Cards</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER TITLE PROMPT -->
+<div class="overlay" id="ch-title-prompt-overlay">
+  <div class="modal" style="width:380px;max-width:96vw;gap:14px;">
+    <h2>Name This Chapter</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">Give this stack a chapter title. It will appear on the board badge and in chapter headings.</p>
+    <div class="field">
+      <label>Chapter Title</label>
+      <input type="text" id="ch-title-prompt-input" placeholder="e.g. That Night / Again" autocomplete="off"
+        onkeydown="if(event.key==='Enter')saveChapterTitlePrompt();if(event.key==='Escape')closeChapterTitlePrompt();">
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeChapterTitlePrompt()">Skip</button>
+      <button class="btn" onclick="saveChapterTitlePrompt()">Set Chapter Title</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER EDIT MODAL -->
+<div class="overlay" id="ch-edit-overlay">
+  <div class="modal" style="width:460px;max-width:96vw;gap:14px;">
+    <h2>Edit Chapter</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">Changes apply to all cards in this chapter.</p>
+    <div class="field">
+      <label>Chapter Title</label>
+      <input type="text" id="ch-edit-title" placeholder="e.g. That Night / Again" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Act</label>
+      <select id="ch-edit-act">
+        <option value="">— No Act —</option>
+        <option value="Act 1">Act 1</option>
+        <option value="Act 2">Act 2</option>
+        <option value="Act 3">Act 3</option>
+        <option value="Prologue">Prologue</option>
+        <option value="Epilogue">Epilogue</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Card Color (applies to all)</label>
+      <div class="modal-colors">
+        <div class="modal-color-opt ch-edit-color" data-color="teal" style="background:var(--col-teal)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="pink" style="background:var(--col-pink)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="green" style="background:var(--col-green)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="orange" style="background:var(--col-orange)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="purple" style="background:var(--col-purple)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="red" style="background:var(--col-red)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="yellow" style="background:var(--col-yellow)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="blue" style="background:var(--col-blue)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="salmon" style="background:var(--col-salmon)"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="white" style="background:var(--col-white);border:1px solid #ddd"></div>
+        <div class="modal-color-opt ch-edit-color" data-color="gray" style="background:var(--col-gray)"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Characters (applies to all)</label>
+      <input type="text" id="ch-edit-char-input" placeholder="Type a name to add…" autocomplete="off"
+        oninput="chEditCharSearch(this.value)" onkeydown="chEditCharKey(event)">
+      <div id="ch-edit-char-dropdown" style="position:relative;"></div>
+      <div id="ch-edit-char-tags" class="char-selected-list" style="margin-top:6px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeChapterEditModal()">Cancel</button>
+      <button class="btn" onclick="applyChapterEdit()">Apply to All Cards</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
