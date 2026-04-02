@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>StoryDeck — DCauterucci 2026</title>
+<title>StoryDeck v47 — DCauterucci 2026</title>
 <style>
 /* System font fallbacks - no external dependency */
 :root {
@@ -102,10 +102,16 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .card.dragging{opacity:0.35;transform:scale(0.95);}
 .card.drag-over{outline:2px dashed rgba(255,255,255,0.6);outline-offset:2px;}
 /* DROP GAP PLACEHOLDER */
-.drop-gap{width:6px;min-width:6px;border-radius:3px;background:linear-gradient(to bottom,transparent,white,transparent);box-shadow:0 0 10px 2px rgba(255,255,255,0.7);align-self:stretch;flex-shrink:0;pointer-events:none;animation:dropglow 0.8s ease-in-out infinite alternate;}
-@keyframes dropglow{from{opacity:0.6;box-shadow:0 0 8px 2px rgba(255,255,255,0.5);}to{opacity:1;box-shadow:0 0 16px 4px rgba(255,255,255,0.9);}}
+.drop-gap{width:6px;min-width:6px;border-radius:3px;background:linear-gradient(to bottom,transparent,var(--accent),transparent);box-shadow:0 0 10px 2px rgba(240,192,96,0.7);align-self:stretch;flex-shrink:0;pointer-events:none;animation:dropglow 0.8s ease-in-out infinite alternate;}
+@keyframes dropglow{from{opacity:0.6;box-shadow:0 0 8px 2px rgba(240,192,96,0.4);}to{opacity:1;box-shadow:0 0 16px 4px rgba(240,192,96,0.9);}}
+@keyframes borderpulse{from{box-shadow:-4px 0 0 0 var(--accent),-4px 0 8px 2px rgba(240,192,96,0.3);}to{box-shadow:-4px 0 0 0 var(--accent),-4px 0 18px 6px rgba(240,192,96,0.85);}}
+@keyframes borderpulseR{from{box-shadow:4px 0 0 0 var(--accent),4px 0 8px 2px rgba(240,192,96,0.3);}to{box-shadow:4px 0 0 0 var(--accent),4px 0 18px 6px rgba(240,192,96,0.85);}}
 /* STACK DROP INDICATORS - keep gold glow for stacking */
-.card.drop-stack{outline:3px solid var(--accent) !important;outline-offset:3px;box-shadow:0 0 18px rgba(240,192,96,0.5) !important;}
+.card.drop-before{animation:borderpulse 0.8s ease-in-out infinite alternate !important;}
+.card.drop-after{animation:borderpulseR 0.8s ease-in-out infinite alternate !important;}
+.card.drop-stack{outline:3px solid var(--accent) !important;outline-offset:3px;box-shadow:0 0 18px rgba(240,192,96,0.5) !important;background:rgba(240,192,96,0.15) !important;position:relative;overflow:visible !important;}
+.stack-label{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Courier New',monospace;font-size:0.65rem;font-weight:700;letter-spacing:0.15em;color:var(--accent);pointer-events:none;text-shadow:0 0 8px rgba(240,192,96,0.8);z-index:20;white-space:nowrap;background:rgba(0,0,0,0.72);padding:4px 10px;border-radius:3px;border:1px solid rgba(240,192,96,0.4);}
+.card.drop-stack .stack-label{display:block;}
 /* STACKED CARD VISUAL */
 .card-stack-wrap{position:relative;display:block;}
 .card-stack-shadow{position:absolute;border-radius:2px;z-index:0;pointer-events:none;}
@@ -218,7 +224,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 .rich-btn{background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:2px 7px;border-radius:2px;line-height:1.4;transition:background 0.1s,color 0.1s;font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;}
 .rich-btn:hover{background:var(--surface2);color:var(--accent);border-color:var(--border);}
 .rich-sep{width:1px;height:14px;background:var(--border);margin:0 3px;}
-.rich-editor{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--card-font,-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif);font-size:calc(var(--card-font-size, 0.74rem) * 1.15);padding:8px 11px;outline:none;min-height:220px;line-height:1.6;transition:border-color 0.15s;white-space:pre-wrap;word-break:break-word;}
+.rich-editor{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--card-font,-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif);font-size:calc(var(--card-font-size, 0.74rem) * 1.15);padding:8px 11px;outline:none;min-height:220px;max-height:340px;overflow-y:auto;line-height:1.6;transition:border-color 0.15s;white-space:pre-wrap;word-break:break-word;}
 .rich-editor:focus{border-color:var(--accent);}
 .rich-editor:empty:before{content:attr(placeholder);color:var(--muted);pointer-events:none;}
 .rich-editor b,.rich-editor strong{color:rgba(255,255,255,0.95);}
@@ -443,7 +449,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
           <div class="ctx-item" onclick="saveManual();toggleExportMenu()">💾 Save Backup (.json)<div class="ctx-sub">Reload into this app later</div></div>
           <div class="ctx-sep"></div>
           <div class="ctx-item" onclick="exportTxt();toggleExportMenu()">📄 Plain Text (.txt)</div>
-          <div class="ctx-item" onclick="exportHtml();toggleExportMenu()">📝 Formatted Doc (.html)<div class="ctx-sub">Opens in Word, Google Docs</div></div>
+          <div class="ctx-item" onclick="openExportModal();toggleExportMenu()">📝 Formatted Doc (.html)<div class="ctx-sub">Opens in Word, Google Docs</div></div>
           <div class="ctx-sep"></div>
           <div class="ctx-item" onclick="printBoard();toggleExportMenu()">🖨 Print Cards</div>
         </div>
@@ -616,7 +622,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 <div class="overlay" id="card-overlay">
   <div class="modal">
     <h2 id="card-modal-title">New Card</h2>
-    <div class="field"><label>Title</label><input type="text" id="card-title-input" placeholder="Scene or chapter title…" autocomplete="off" style="font-family:var(--card-font);" onkeydown="if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();document.getElementById('card-body-input').focus();}"></div>
+    <div class="field"><label>Title</label><input type="text" id="card-title-input" placeholder="Scene or chapter title…" autocomplete="off" style="font-family:var(--card-font);" onkeydown="if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();document.getElementById('card-body-input').focus();}" oninput="scheduleAutosave()"></div>
     <div class="field">
       <label>Notes / Summary</label>
       <div class="rich-toolbar">
@@ -631,9 +637,14 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
         <button type="button" class="rich-btn" onclick="adjustModalFontSize(-1)" title="Decrease font size" style="font-size:0.7rem;">A−</button>
         <span id="modal-font-size-display" style="font-family:'Courier New', Courier, monospace;font-size:0.58rem;color:var(--muted);padding:0 2px;min-width:26px;text-align:center;"></span>
         <button type="button" class="rich-btn" onclick="adjustModalFontSize(1)" title="Increase font size" style="font-size:0.85rem;">A+</button>
+        <div style="flex:1"></div>
+        <button type="button" id="quick-save-btn" onclick="quickSaveCard()" title="Save without closing" style="font-family:'Courier New',monospace;font-size:0.62rem;padding:2px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:2px;transition:all 0.15s;white-space:nowrap;">💾 Save</button>
       </div>
-      <div id="card-body-input" contenteditable="true" class="rich-editor" placeholder="What happens? Key details, beats, ideas…" oninput="updateCardWordCount()"></div>
-      <div style="text-align:right;margin-top:4px;"><span id="card-word-count" style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted)"></span></div>
+      <div id="card-body-input" contenteditable="true" class="rich-editor" placeholder="What happens? Key details, beats, ideas…" oninput="updateCardWordCount();scheduleAutosave()"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+        <span id="card-word-count" style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted)"></span>
+        <button type="button" id="quick-save-btn-bottom" onclick="quickSaveCard()" title="Save without closing" style="font-family:'Courier New',monospace;font-size:0.62rem;padding:2px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:2px;transition:all 0.15s;white-space:nowrap;">💾 Save</button>
+      </div>
     </div>
     <div class="field">
       <label>Act</label>
@@ -682,10 +693,12 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
       <div id="flag-notes-area" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
       <input type="hidden" id="flag-note-input-single">
     </div>
-    <div class="modal-actions">
-      <button class="btn ghost" onclick="closeCardModal()">Cancel</button>
+    <div class="modal-actions" style="justify-content:space-between;">
       <button class="btn" id="modal-delete-btn" style="background:#c03030;color:white;display:none" onclick="deleteFromModal()">Delete</button>
-      <button class="btn" onclick="saveCard()">Save Card</button>
+      <div style="display:flex;gap:10px;margin-left:auto;">
+        <button class="btn ghost" onclick="closeCardModal()">Cancel</button>
+        <button class="btn" id="save-card-btn-bottom" onclick="saveCard()">Save Card</button>
+      </div>
     </div>
   </div>
 </div>
@@ -730,28 +743,41 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 
 <!-- MOVE MODAL -->
 <div class="overlay" id="move-overlay">
-  <div class="modal" style="width:400px">
+  <div class="modal" style="width:420px">
     <h2>Move Card To…</h2>
     <!-- Tabs -->
-    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:2px;">
-      <div class="move-tab active" id="mtab-chapter" onclick="switchMoveTab('chapter')" style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:7px 16px;cursor:pointer;color:var(--accent);border-bottom:2px solid var(--accent);letter-spacing:0.05em;">Into a Chapter</div>
-      <div class="move-tab" id="mtab-project" onclick="switchMoveTab('project')" style="font-family:'Courier New', Courier, monospace;font-size:0.68rem;padding:7px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;letter-spacing:0.05em;">To Another Project</div>
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:12px;">
+      <div class="move-tab active" id="mtab-chapter" onclick="switchMoveTab('chapter')" style="font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:8px 18px;cursor:pointer;color:var(--accent);border-bottom:2px solid var(--accent);letter-spacing:0.05em;">Into a Chapter</div>
+      <div class="move-tab" id="mtab-board" onclick="switchMoveTab('board')" style="font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:8px 18px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;letter-spacing:0.05em;">Onto the Board</div>
+      <div class="move-tab" id="mtab-ideas" onclick="switchMoveTab('ideas')" style="font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:8px 18px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;letter-spacing:0.05em;">Into Ideas</div>
     </div>
-    <!-- Chapter tab content -->
+
+    <!-- Into a Chapter tab -->
     <div id="move-chapter-content">
-      <!-- Move to Uncategorized -->
-      <button onclick="moveToUncategorized()" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:9px;cursor:pointer;margin-bottom:12px;transition:all 0.12s;border-radius:2px;text-align:left;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">⬚ Move to Ideas — remove Act &amp; Chapter</button>
-      <div style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);margin-bottom:8px">Pick a chapter card to nest this beat inside.</div>
-      <!-- Section: nest inside a card -->
-      <div style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px">Nest inside a chapter card</div>
-      <div id="move-chapter-list" style="display:flex;flex-direction:column;gap:5px;max-height:320px;overflow-y:auto;margin-bottom:12px"></div>
-      <div id="move-label-list" style="display:none"></div>
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);margin-bottom:8px;">Pick a chapter to nest this beat inside.</div>
+      <div id="move-chapter-list" style="display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;margin-bottom:12px;"></div>
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'Courier New',monospace;font-size:0.62rem;color:var(--muted);flex-shrink:0;">To Another Project:</span>
+        <select id="move-project-select" onchange="moveToProjectFromSelect(this)" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;font-size:0.65rem;padding:4px 8px;outline:none;cursor:pointer;">
+          <option value="">— Select project —</option>
+        </select>
+      </div>
+      <div id="move-label-list" style="display:none;"></div>
     </div>
-    <!-- Project tab content -->
-    <div id="move-project-content" style="display:none">
-      <div style="font-family:'Courier New', Courier, monospace;font-size:0.62rem;color:var(--muted);margin-bottom:8px">Move this card to a different project.</div>
-      <div id="move-project-list" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;"></div>
+
+    <!-- Onto the Board tab -->
+    <div id="move-board-content" style="display:none;">
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.72rem;color:var(--text);margin-bottom:12px;line-height:1.7;">This card will be removed from its stack and placed on the board as its own chapter, right after the stack it came from.</div>
+      <div id="move-board-children" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+      <button id="move-board-solo-btn" onclick="moveCardToBoardFromModal()" style="display:none;width:100%;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:10px;cursor:pointer;border-radius:2px;text-align:center;">↑ Move onto Board</button>
     </div>
+
+    <!-- Into Ideas tab -->
+    <div id="move-ideas-content" style="display:none;">
+      <div style="font-family:'Courier New', Courier, monospace;font-size:0.72rem;color:var(--text);margin-bottom:16px;line-height:1.7;">This will remove the card from its current chapter and place it in <strong>Ideas</strong>. Act and Chapter info will be cleared.</div>
+      <button onclick="moveToUncategorized()" style="width:100%;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Courier New', Courier, monospace;font-size:0.72rem;padding:10px;cursor:pointer;border-radius:2px;text-align:center;">⬚ Move to Ideas</button>
+    </div>
+
     <div class="modal-actions"><button class="btn ghost" onclick="closeMoveModal()">Cancel</button></div>
   </div>
 </div>
@@ -788,11 +814,58 @@ function saveState() {
   if (typeof updateAutosaveUI === 'function') updateAutosaveUI('unsaved');
 }
 
+// Repair stale child.chapter / child.chapterTitle fields AND deduplicate card IDs.
+// A card's ID must appear in exactly ONE place in the data structure.
+// Stale or duplicated values create phantom chapters and broken Move modal behavior.
+function repairChildChapters(st) {
+  if(!st || !st.projects) return;
+  st.projects.forEach(proj => {
+    const seenIds = new Set();
+    // First pass: collect all root card IDs
+    (proj.cards||[]).forEach(c => seenIds.add(c.id));
+    // Second pass: fix chapter fields and deduplicate children
+    (proj.cards||[]).forEach(parent => {
+      const uniqueChildren = [];
+      (parent.children||[]).forEach(child => {
+        if(seenIds.has(child.id)) return; // duplicate — skip
+        seenIds.add(child.id);
+        // Sync chapter/chapterTitle to parent
+        child.chapter = parent.chapter;
+        child.chapterTitle = parent.chapterTitle || parent.title || '';
+        uniqueChildren.push(child);
+      });
+      parent.children = uniqueChildren;
+    });
+  });
+}
+
 let state = loadState();
+repairChildChapters(state);
+try { localStorage.setItem('storyboard-v3', JSON.stringify(state)); } catch(e) {}
 // Flag labels are stored per-project
 let editingCardId=null, selectedCardColor='teal', selectedFlag='none', selectedFlags=[], selectedFlagNotes={};
 let filterColor='all', flagFilter='all', charFilter=null;
 let dragSrcId=null, dragSrcIsStack=false, selectedProjColor='#f0c060', editingProjId=null;
+
+// Auto-scroll during drag — uses #view-board which is the actual scrollable container
+let _autoScrollFrame = null;
+function startAutoScroll(e) {
+  const scrollEl = document.getElementById('view-board');
+  if(!scrollEl) return;
+  const rect = scrollEl.getBoundingClientRect();
+  const ZONE = 80;
+  const MAX_SPEED = 15;
+  let dy = 0;
+  if(e.clientY < rect.top + ZONE) dy = -MAX_SPEED * (1 - (e.clientY - rect.top) / ZONE);
+  else if(e.clientY > rect.bottom - ZONE) dy = MAX_SPEED * (1 - (rect.bottom - e.clientY) / ZONE);
+  cancelAnimationFrame(_autoScrollFrame);
+  if(dy !== 0) {
+    const scroll = () => { scrollEl.scrollTop += dy; _autoScrollFrame = requestAnimationFrame(scroll); };
+    _autoScrollFrame = requestAnimationFrame(scroll);
+  }
+}
+document.addEventListener('dragover', e => { if(dragSrcId) startAutoScroll(e); });
+document.addEventListener('dragend', () => { cancelAnimationFrame(_autoScrollFrame); _autoScrollFrame = null; });
 let drillStack=[]; // [{cardId, title}] - stack of parent cards we've drilled into
 let ctxTargetId=null, editingCharId=null, movingCardId=null;
 let selectedCharIds=[], searchQuery='', currentView='board';
@@ -1594,7 +1667,70 @@ function openCardModal(id=null) {
     ti.focus(); ti.select();
   },50);
 }
+let _autosaveTimer = null;
+function scheduleAutosave() {
+  if(!editingCardId) return; // only autosave existing cards, not new ones
+  clearTimeout(_autosaveTimer);
+  _autosaveTimer = setTimeout(() => {
+    quickSaveCard();
+  }, 3000); // 3 seconds after last keystroke
+}
+
+function quickSaveCard() {
+  const proj = activeProject(); if(!proj) return;
+  if(!editingCardId) { saveCard(); return; }
+  const c = findCardAnywhere(proj.cards, editingCardId); if(!c) return;
+  const title = document.getElementById('card-title-input').value.trim();
+  const body = document.getElementById('card-body-input').innerHTML.trim();
+  const actVal = getActValue();
+  const {act: oldAct} = splitActChapter(c.chapter||'');
+  c.title = title;
+  c.body = body;
+  c.chapter = buildChapter(actVal||oldAct, c.chapterTitle||title);
+  c.color = selectedCardColor;
+  c.flag = selectedFlags.length>0?selectedFlags[0]:'none';
+  c.flags = [...selectedFlags];
+  c.characters = [...selectedCharIds];
+  saveState();
+  // Flash all save buttons
+  flashAllSaveBtns();
+}
+
+function flashAllSaveBtns() {
+  ['quick-save-btn','quick-save-btn-bottom'].forEach(id => {
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    btn.textContent = '✓ Saved';
+    btn.style.color = 'var(--accent)';
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.background = 'rgba(240,192,96,0.1)';
+    clearTimeout(btn._flashT);
+    btn._flashT = setTimeout(()=>{
+      btn.textContent = '💾 Save';
+      btn.style.color = 'var(--muted)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.background = 'transparent';
+    }, 1500);
+  });
+}
+
+function flashSaveBtn(btn, originalText) {
+  if(!btn) return;
+  btn.textContent = '✓ ' + originalText;
+  btn.style.color = 'var(--accent)';
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.background = 'rgba(240,192,96,0.1)';
+  clearTimeout(btn._flashT);
+  btn._flashT = setTimeout(()=>{
+    btn.textContent = originalText;
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.style.background = '';
+  }, 300);
+}
+
 function closeCardModal(){
+  clearTimeout(_autosaveTimer);
   document.getElementById('card-overlay').classList.remove('open');
   editingCardId=null;
 }
@@ -1627,7 +1763,8 @@ function setCardColor(color) {
   document.querySelectorAll('.modal-color-opt').forEach(el=>el.classList.toggle('active',el.dataset.color===color));
 }
 document.querySelectorAll('.modal-color-opt').forEach(el=>el.addEventListener('click',()=>setCardColor(el.dataset.color)));
-document.getElementById('card-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('card-overlay'))closeCardModal();});
+// Overlay click intentionally does NOT close card modal — use Cancel button or Escape
+// document.getElementById('card-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('card-overlay'))closeCardModal();});
 document.getElementById('proj-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('proj-overlay'))closeProjModal();});
 document.getElementById('char-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('char-overlay'))closeCharModal();});
 document.getElementById('move-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('move-overlay'))closeMoveModal();});
@@ -1704,7 +1841,9 @@ function saveCard() {
   else if(currentView==='beats') renderBeatsView();
   else if(currentView==='acts') renderActs();
   else renderBoard();
-  closeCardModal();
+  flashSaveBtn(document.getElementById('save-card-btn-bottom'), 'Save Card');
+  flashAllSaveBtns();
+  setTimeout(closeCardModal, 300);
 }
 
 function deleteCard(id) {
@@ -1816,13 +1955,70 @@ let moveTabActive='chapter';
 function switchMoveTab(tab) {
   moveTabActive=tab;
   document.getElementById('move-chapter-content').style.display = tab==='chapter'?'block':'none';
-  document.getElementById('move-project-content').style.display = tab==='project'?'block':'none';
-  const chTab=document.getElementById('mtab-chapter');
-  const prTab=document.getElementById('mtab-project');
-  chTab.style.color = tab==='chapter'?'var(--accent)':'var(--muted)';
-  chTab.style.borderBottomColor = tab==='chapter'?'var(--accent)':'transparent';
-  prTab.style.color = tab==='project'?'var(--accent)':'var(--muted)';
-  prTab.style.borderBottomColor = tab==='project'?'var(--accent)':'transparent';
+  document.getElementById('move-board-content').style.display = tab==='board'?'block':'none';
+  document.getElementById('move-ideas-content').style.display = tab==='ideas'?'block':'none';
+  ['chapter','board','ideas'].forEach(t => {
+    const el = document.getElementById('mtab-'+t);
+    if(el) {
+      el.style.color = tab===t ? 'var(--accent)' : 'var(--muted)';
+      el.style.borderBottomColor = tab===t ? 'var(--accent)' : 'transparent';
+    }
+  });
+
+  if(tab === 'board') {
+    const proj = activeProject(); if(!proj) return;
+    const card = findCardAnywhere(proj.cards, movingCardIdVal);
+    const childrenList = document.getElementById('move-board-children');
+    const soloBtn = document.getElementById('move-board-solo-btn');
+    childrenList.innerHTML = '';
+    const children = card ? (card.children||[]) : [];
+    if(children.length > 0) {
+      // It's a stack parent — show children to pick from
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-family:"Courier New",monospace;font-size:0.62rem;color:var(--muted);margin-bottom:6px;';
+      lbl.textContent = 'Pick which beat to move onto the board:';
+      childrenList.appendChild(lbl);
+      children.forEach(child => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'display:block;width:100%;text-align:left;padding:9px 12px;background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--card-font);font-size:0.82rem;cursor:pointer;border-radius:2px;margin-bottom:4px;transition:all 0.12s;';
+        btn.textContent = child.title || '(untitled)';
+        btn.onmouseover = () => { btn.style.borderColor='var(--accent)'; btn.style.color='var(--accent)'; };
+        btn.onmouseout = () => { btn.style.borderColor='var(--border)'; btn.style.color='var(--text)'; };
+        btn.onclick = () => { closeMoveModal(); moveCardToBoard(card, child.id); };
+        childrenList.appendChild(btn);
+      });
+      soloBtn.style.display = 'none';
+    } else {
+      // It's a root card — just move it solo
+      soloBtn.style.display = 'block';
+    }
+  }
+}
+
+function moveCardToBoardFromModal() {
+  const proj = activeProject(); if(!proj) return;
+  if(!movingCardIdVal) return;
+
+  // Check if it's a root card first
+  const rootCard = proj.cards.find(c=>c.id===movingCardIdVal);
+  if(rootCard) {
+    // Already on the board — just reset its chapterTitle to its own title
+    pushUndo();
+    rootCard.chapterTitle = rootCard.title;
+    rootCard.chapter = buildChapter(splitActChapter(rootCard.chapter||'').act, rootCard.title);
+    saveState(); renderBoard(); closeMoveModal();
+    showToast('"'+rootCard.title+'" now has its own chapter title');
+    return;
+  }
+
+  // It's a child card — find its parent and move it to board
+  let parentCard = null;
+  proj.cards.forEach(c => {
+    if((c.children||[]).find(ch=>ch.id===movingCardIdVal)) parentCard = c;
+  });
+  if(!parentCard) { showToast("Couldn't find this card's parent"); return; }
+  moveCardToBoard(parentCard, movingCardIdVal);
+  // Note: closeMoveModal is called inside moveCardToBoard
 }
 
 function openMoveModal(cardId) {
@@ -1830,26 +2026,34 @@ function openMoveModal(cardId) {
   const proj=activeProject(); if(!proj) return;
   switchMoveTab('chapter');
 
-  // -- Chapter cards list (cards with children or any card that's a chapter)
+  // -- Chapter list: all root cards except self and current parent
   const chList=document.getElementById('move-chapter-list'); chList.innerHTML='';
-  const rootCards=proj.cards.filter(c=>c.id!==cardId);
+  const movingCard=findCardAnywhere(proj.cards, cardId);
+  // Find current parent — stop at first match so a duplicate child entry
+  // in another card can't overwrite currentParentId and exclude the wrong card.
+  let currentParentId = null;
+  for(const c of proj.cards) {
+    if((c.children||[]).some(ch=>ch.id===cardId)) { currentParentId = c.id; break; }
+  }
+  const rootCards=[...proj.cards]
+    .sort((a,b)=>(a.order||0)-(b.order||0))
+    .filter(c => c.id !== cardId && c.id !== currentParentId);
   if(rootCards.length===0){
-    chList.innerHTML='<div style="color:var(--muted);font-family:&quot;IBM Plex Mono&quot;,monospace;font-size:0.72rem;padding:6px 0">No chapter cards yet - create one first.</div>';
+    chList.innerHTML='<div style="color:var(--muted);font-family:\'Courier New\',monospace;font-size:0.72rem;padding:6px 0">No other chapters yet.</div>';
   } else {
     rootCards.forEach(c=>{
       const btn=document.createElement('button');
       btn.className='move-proj-btn';
       const bg=COLORS[c.color]||'#888';
       const childCount=(c.children||[]).length;
-      btn.innerHTML=`<span style="width:10px;height:10px;border-radius:50%;background:${bg};flex-shrink:0;border:1px solid rgba(0,0,0,0.2)"></span><span style="flex:1;font-size:0.82rem">${esc(c.title||'(untitled)')}</span><span style="font-family:'Courier New', Courier, monospace;font-size:0.58rem;color:var(--muted)">${childCount+1} beat${(childCount+1)!==1?'s':''}</span>`;
+      const chLabel = c.chapterTitle || c.title || '(untitled)';
+      btn.innerHTML=`<span style="width:10px;height:10px;border-radius:50%;background:${bg};flex-shrink:0;border:1px solid rgba(0,0,0,0.2)"></span><span style="flex:1;font-size:0.82rem">${esc(chLabel)}</span><span style="font-family:'Courier New', Courier, monospace;font-size:0.58rem;color:var(--muted)">${childCount} beat${childCount!==1?'s':''}</span>`;
       btn.onclick=()=>moveCardIntoParent(c.id);
       chList.appendChild(btn);
     });
   }
-
   // -- Chapter label suggestions (existing labels used in the project)
   const labelList=document.getElementById('move-label-list'); labelList.innerHTML='';
-  const movingCard=findCardAnywhere(proj.cards, cardId);
   const usedLabels=[...new Set(
     getAllCards(proj.cards)
       .map(c=>splitActChapter(c.chapter||'').chapter)
@@ -1871,19 +2075,24 @@ function openMoveModal(cardId) {
     });
   }
 
-  // -- Projects list
-  const pList=document.getElementById('move-project-list'); pList.innerHTML='';
+  // -- Populate project dropdown
+  const pSel = document.getElementById('move-project-select');
+  pSel.innerHTML = '<option value="">— Select project —</option>';
   state.projects.forEach(p=>{
     if(p.id===state.activeId) return;
-    const btn=document.createElement('button');
-    btn.className='move-proj-btn';
-    btn.innerHTML=`<span style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></span><span style="flex:1">${esc(p.name)}</span><span style="font-family:'Courier New', Courier, monospace;font-size:0.6rem;color:var(--muted)">${p.cards.length} cards</span>`;
-    btn.onclick=()=>moveCardToProject(p.id);
-    pList.appendChild(btn);
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name + ' (' + p.cards.length + ' cards)';
+    pSel.appendChild(opt);
   });
-  if(!pList.children.length) pList.innerHTML='<div style="color:var(--muted);font-family:&quot;IBM Plex Mono&quot;,monospace;font-size:0.72rem;padding:8px 0">No other projects yet.</div>';
 
   document.getElementById('move-overlay').classList.add('open');
+}
+
+function moveToProjectFromSelect(sel) {
+  if(!sel.value) return;
+  moveCardToProject(sel.value);
+  sel.value = '';
 }
 
 function getAllCards(cards) {
@@ -1907,8 +2116,9 @@ function moveToUncategorized() {
   }
   removeFromArray(proj.cards);
 
-  // Clear chapter and add to root proj.cards
+  // Clear chapter, chapterTitle and add to root proj.cards
   card.chapter = '';
+  card.chapterTitle = card.title; // reset to own title
   card.children = card.children || [];
   card.order = proj.cards.length;
   proj.cards.push(card);
@@ -1922,18 +2132,32 @@ function moveToUncategorized() {
 
 function moveCardIntoParent(parentId) {
   const proj=activeProject(); if(!proj||!movingCardIdVal) return;
-  // Remove from current location
-  const cc=currentCards();
-  const idx=cc.findIndex(c=>c.id===movingCardIdVal);
-  if(idx===-1){showToast('Can only move top-level cards into a chapter');closeMoveModal();return;}
-  const [card]=cc.splice(idx,1);
-  cc.forEach((c,i)=>c.order=i);
-  // Add to parent's children
+  // Find the card anywhere in the project
+  const card = findCardAnywhere(proj.cards, movingCardIdVal);
+  if(!card){ showToast('Card not found'); closeMoveModal(); return; }
+  // Remove from current location (root or children)
+  function removeFrom(arr) {
+    const i = arr.findIndex(c=>c.id===movingCardIdVal);
+    if(i!==-1){ arr.splice(i,1); arr.forEach((c,j)=>c.order=j); return true; }
+    for(const c of arr){ if(c.children && removeFrom(c.children)) return true; }
+    return false;
+  }
+  removeFrom(proj.cards);
+  // Add to new parent's children
   const parent=findCardAnywhere(proj.cards, parentId);
+  if(!parent){ showToast('Target chapter not found'); closeMoveModal(); return; }
   if(!parent.children) parent.children=[];
   card.order=parent.children.length;
+  card.chapter = parent.chapter;
+  card.chapterTitle = parent.chapterTitle || parent.title;
   parent.children.push(card);
-  saveState(); renderSidebar(); renderBoard(); closeMoveModal();
+  proj.cards.forEach((c,i)=>c.order=i);
+  saveState(); renderSidebar();
+  if(currentView==='chapters') renderChaptersView();
+  else if(currentView==='acts') renderActs();
+  else if(currentView==='beats') renderBeatsView();
+  else renderBoard();
+  closeMoveModal();
   showToast('"'+card.title+'" moved into "'+parent.title+'"');
 }
 
@@ -1982,23 +2206,19 @@ function renderBoard() {
     if(charFilter) visible=visible.filter(c=>c.characters&&c.characters.includes(charFilter));
   }
 
-  // Universal sort helper — categorized first, uncategorized last by act>chapter>neither
+  // Sort helper — only enforces categorized-first when explicitly sorting by chapter/act.
+  // In manual mode, respect the user's drag order (.order) without overriding it.
   function sortCards(arr, byChapter, byAct) {
     arr.sort((a,b)=>{
       const aCat=isCategorized(a), bCat=isCategorized(b);
-      // Categorized always before uncategorized
-      if(aCat!==bCat) return aCat?-1:1;
+      // Categorized always before uncategorized ONLY in chapter/act sort modes
+      if((byChapter||byAct) && aCat!==bCat) return aCat?-1:1;
       if(aCat && bCat) {
         // Both categorized — sort by chapter/act
         const ca=a.chapter||'', cb=b.chapter||'';
         if(byAct){const aa=splitActChapter(ca).act||'',ab=splitActChapter(cb).act||'';if(aa!==ab)return aa.localeCompare(ab);}
         if(byChapter) return ca.localeCompare(cb)||a.order-b.order;
       }
-      // Both uncategorized — act-only > chapter-only > neither
-      const {act:aA,chapter:aC}=splitActChapter(a.chapter||'');
-      const {act:bA,chapter:bC}=splitActChapter(b.chapter||'');
-      const aS=(aA?2:0)+(aC?1:0), bS=(bA?2:0)+(bC?1:0);
-      if(aS!==bS) return bS-aS;
       return a.order-b.order;
     });
   }
@@ -2103,50 +2323,44 @@ function renderBoard() {
       : 'Add card';
   }
 
-  // Allow dropping at the very end (onto card-add or empty board space)
+  // Allow dropping at the very end (onto card-add)
   const cardAddEl = board.querySelector('.card-add');
   if(cardAddEl) {
     cardAddEl.addEventListener('dragover', e=>{
       if(!dragSrcId) return;
       e.preventDefault();
-      if(!document.getElementById('active-drop-gap')) {
-        const proj = activeProject(); if(!proj) return;
-        const cards = drillStack.length>0 ? currentCards() : proj.cards;
-        const lastCard = cards[cards.length-1];
-        if(lastCard && lastCard.id !== dragSrcId) {
-          removeDropGap();
-          const gap = document.createElement('div');
-          gap.className = 'drop-gap';
-          gap.id = 'active-drop-gap';
-          gap.dataset.targetId = lastCard.id;
-          gap.dataset.position = 'after';
-          cardAddEl.parentNode.insertBefore(gap, cardAddEl);
-        }
-      }
+      cardAddEl.style.borderColor = 'var(--accent)';
+      cardAddEl.style.boxShadow = '-4px 0 0 0 var(--accent), -4px 0 14px 3px rgba(240,192,96,0.6)';
+      cardAddEl.style.animation = 'borderpulse 0.8s ease-in-out infinite alternate';
     });
-    cardAddEl.addEventListener('dragleave', ()=>{ removeDropGap(); });
+    cardAddEl.addEventListener('dragleave', e=>{
+      if(e.relatedTarget && cardAddEl.contains(e.relatedTarget)) return;
+      cardAddEl.style.borderColor = '';
+      cardAddEl.style.boxShadow = '';
+      cardAddEl.style.animation = '';
+    });
     cardAddEl.addEventListener('drop', e=>{
       e.preventDefault();
-      const gap = document.getElementById('active-drop-gap');
-      if(!gap || !dragSrcId) return;
-      const targetId = gap.dataset.targetId;
-      removeDropGap(); clearDropClasses();
+      cardAddEl.style.borderColor = '';
+      cardAddEl.style.boxShadow = '';
+      cardAddEl.style.animation = '';
+      clearDropClasses(); removeDropGap();
+      if(!dragSrcId) return;
       const proj = activeProject(); if(!proj) return;
       pushUndo();
       if(drillStack.length > 0) {
         const flat = currentCards();
-        const si=flat.findIndex(x=>x.id===dragSrcId);
-        const di=flat.findIndex(x=>x.id===targetId);
-        if(si===-1||di===-1) return;
-        const [moved]=flat.splice(si,1);
+        const si = flat.findIndex(x=>x.id===dragSrcId);
+        if(si===-1) return;
+        const [moved] = flat.splice(si,1);
         flat.push(moved);
         flat.forEach((x,i)=>x.order=i);
         commitFlatOrder(flat);
       } else {
         const cc = proj.cards;
-        const si=cc.findIndex(x=>x.id===dragSrcId);
+        const si = cc.findIndex(x=>x.id===dragSrcId);
         if(si===-1) return;
-        const [moved]=cc.splice(si,1);
+        const [moved] = cc.splice(si,1);
         cc.push(moved);
         cc.forEach((x,i)=>x.order=i);
       }
@@ -2196,6 +2410,7 @@ function makeCard(c, sq='', cardIndex=null) {
   const badgeHtml = badgeText ? `<div class="card-ch-badge">${esc(badgeText)}</div>` : '';
 
   div.innerHTML=`${flagHtml}${badgeHtml}
+<span class="stack-label">STACKING</span>
 <div class="card-title">${esc(c.title)}</div>
 <div class="card-body">${esc(bodyPreview)}</div>
 <div class="card-actions">
@@ -2228,62 +2443,46 @@ function makeCard(c, sq='', cardIndex=null) {
     const x = e.clientX - rect.left;
     const w = rect.width;
     const zone = x / w;
-    const targetIsStack = (c.children||[]).length > 0 && drillStack.length === 0;
 
-    // Allow stacking onto any card — only block if SOURCE is a stack, or in chapters/beats view
-    if(zone > 0.25 && zone < 0.75 && !dragSrcIsStack && currentView !== 'chapters' && currentView !== 'beats') {
-      // Center zone = stack — only update if not already showing stack
-      if(!div.classList.contains('drop-stack')) {
-        clearDropClasses();
-        removeDropGap();
-        div.classList.add('drop-stack');
-      }
+    // Clear other cards' drop classes first
+    document.querySelectorAll('.card.drop-before,.card.drop-after,.card.drop-stack').forEach(el=>{
+      if(el !== div) el.classList.remove('drop-before','drop-after','drop-stack');
+    });
+
+    if(zone > 0.3 && zone < 0.7 && !dragSrcIsStack && currentView !== 'chapters' && currentView !== 'beats' && drillStack.length === 0) {
+      div.classList.remove('drop-before','drop-after');
+      div.classList.add('drop-stack');
     } else {
-      // Left/right zone = insert gap
-      if(div.classList.contains('drop-stack')) {
-        div.classList.remove('drop-stack');
-      }
-      const insertBefore = zone <= 0.5;
-      const existingGap = document.getElementById('active-drop-gap');
-      const existingPos = existingGap ? existingGap.dataset.position : null;
-      const existingTarget = existingGap ? existingGap.dataset.targetId : null;
-      // Only rebuild gap if position changed
-      if(!existingGap || existingPos !== (insertBefore?'before':'after') || existingTarget !== c.id) {
-        clearDropClasses();
-        removeDropGap();
-        const parent = div.closest('.board,.card-children-inline,.chapters-grid');
-        if(parent) {
-          const gap = document.createElement('div');
-          gap.className = 'drop-gap';
-          gap.id = 'active-drop-gap';
-          gap.dataset.targetId = c.id;
-          gap.dataset.position = insertBefore ? 'before' : 'after';
-          const anchor = div.closest('.card-stack-wrap') || div;
-          if(insertBefore) anchor.parentNode.insertBefore(gap, anchor);
-          else {
-            const next = anchor.nextSibling;
-            if(next) anchor.parentNode.insertBefore(gap, next);
-            else anchor.parentNode.appendChild(gap);
-          }
-        }
+      div.classList.remove('drop-stack');
+      if(zone <= 0.3) {
+        div.classList.remove('drop-after');
+        div.classList.add('drop-before');
+        div.dataset.dropPos = 'before';
+      } else {
+        div.classList.remove('drop-before');
+        div.classList.add('drop-after');
+        div.dataset.dropPos = 'after';
       }
     }
   });
 
   div.addEventListener('dragleave', e=>{
-    if(!e.relatedTarget || !e.relatedTarget.closest('.board,.card-children-inline,.chapters-grid')) {
-      clearDropClasses();
+    // Only clear if truly leaving this card (not moving to a child element)
+    const related = e.relatedTarget;
+    if(!related || (!div.contains(related) && related !== div)) {
+      div.classList.remove('drop-before','drop-after','drop-stack');
     }
   });
 
   div.addEventListener('drop',e=>{
     e.preventDefault();
     const wasStack = div.classList.contains('drop-stack');
+    const wasBefore = div.classList.contains('drop-before');
+    const wasAfter = div.classList.contains('drop-after');
     clearDropClasses();
-    const gap = document.getElementById('active-drop-gap');
-    const targetId = gap ? gap.dataset.targetId : c.id;
-    const position = gap ? gap.dataset.position : 'after';
     removeDropGap();
+    const targetId = c.id;
+    const position = wasBefore ? 'before' : 'after';
     if(!dragSrcId||dragSrcId===c.id) return;
     const proj=activeProject(); if(!proj) return;
 
@@ -2359,7 +2558,7 @@ function makeCard(c, sq='', cardIndex=null) {
     } else {
       const srcCard = findCardAnywhere(proj.cards, dragSrcId);
       const dstCard = c;
-      if(!isCategorized(srcCard) && isCategorized(dstCard)){showDragWarning(dragSrcId);return;}
+      const srcUncategorized = !isCategorized(srcCard) && isCategorized(dstCard);
       const cc = proj.cards;
       const si=cc.findIndex(x=>x.id===dragSrcId);
       const di=cc.findIndex(x=>x.id===targetId);
@@ -2369,6 +2568,14 @@ function makeCard(c, sq='', cardIndex=null) {
       const newDi=cc.findIndex(x=>x.id===targetId);
       cc.splice(position==='after'?newDi+1:newDi,0,moved);
       cc.forEach((x,i)=>x.order=i);
+
+      // Dropped an uncategorized card next to a categorized one — prompt to assign act
+      if(srcUncategorized) {
+        const destAct = splitActChapter(dstCard.chapter||'').act || '';
+        saveState(); renderBoard();
+        setTimeout(()=>openAssignActModal(moved.id, destAct), 200);
+        return;
+      }
 
       // If dragging a stack, check if act changed vs neighbours
       if(dragSrcIsStack) {
@@ -2581,21 +2788,21 @@ function setupEndDropZone(el, container, onDrop) {
   el.addEventListener('dragover', e => {
     if(!dragSrcId) return;
     e.preventDefault();
-    if(!document.getElementById('active-drop-gap')) {
-      removeDropGap();
-      const gap = document.createElement('div');
-      gap.className = 'drop-gap';
-      gap.id = 'active-drop-gap';
-      gap.dataset.targetId = '__end__';
-      gap.dataset.position = 'end';
-      el.parentNode.insertBefore(gap, el);
-    }
+    el.style.borderColor = 'var(--accent)';
+    el.style.boxShadow = '-4px 0 0 0 var(--accent), -4px 0 14px 3px rgba(240,192,96,0.6)';
+    el.style.animation = 'borderpulse 0.8s ease-in-out infinite alternate';
   });
   el.addEventListener('dragleave', e => {
-    if(!e.relatedTarget || !e.relatedTarget.closest('.board,.chapters-grid,.card-children-inline')) removeDropGap();
+    if(!e.relatedTarget || el.contains(e.relatedTarget)) return;
+    el.style.borderColor = '';
+    el.style.boxShadow = '';
+    el.style.animation = '';
   });
   el.addEventListener('drop', e => {
     e.preventDefault();
+    el.style.borderColor = '';
+    el.style.boxShadow = '';
+    el.style.animation = '';
     removeDropGap(); clearDropClasses();
     onDrop();
   });
@@ -2681,15 +2888,17 @@ function renderChaptersView() {
   container.innerHTML = '';
 
   const sorted = [...proj.cards].sort((a,b) => a.order - b.order);
-  const allCards = [];
-  sorted.forEach(c=>{ allCards.push(c); (c.children||[]).forEach(ch=>allCards.push(ch)); });
-  const categorized = allCards.filter(c=>isCategorized(c));
 
+  // Group by ROOT card's chapter — children always follow their parent,
+  // regardless of any stale chapter field the child might carry.
   const seenCh = [];
   const groups = [];
-  categorized.forEach(c=>{
-    if(!seenCh.includes(c.chapter)){ seenCh.push(c.chapter); groups.push({ch:c.chapter,cards:[]}); }
-    groups.find(g=>g.ch===c.chapter).cards.push(c);
+  sorted.forEach(c => {
+    if(!isCategorized(c)) return;
+    if(!seenCh.includes(c.chapter)) {
+      seenCh.push(c.chapter);
+      groups.push({ch: c.chapter, cards: [c, ...(c.children||[])]});
+    }
   });
 
   if(groups.length===0){
@@ -2823,16 +3032,16 @@ function renderActs() {
   // Group by chapter/act - show full label as column header
   const groups={};
   const order=[];
-  // Build flat card list preserving board order: parent first, then its children in sequence
-  const allActCards = [];
+  // Build groups from root cards only — children follow their parent's chapter key.
+  // This prevents stale child.chapter fields from creating phantom columns.
   [...proj.cards].sort((a,b)=>a.order-b.order).forEach(c=>{
-    allActCards.push(c);
-    (c.children||[]).forEach((child,i)=>{ child._parentOrder=c.order; child._childOrder=i; allActCards.push(child); });
-  });
-  allActCards.forEach(c=>{
     const key = isCategorized(c) ? c.chapter : '~~ideas~~';
     if(!groups[key]){groups[key]=[];order.push(key);}
     groups[key].push(c);
+    (c.children||[]).forEach((child,i)=>{
+      child._parentOrder=c.order; child._childOrder=i;
+      groups[key].push(child);
+    });
   });
 
   // Keep columns in the order they first appear on the board (ideas last)
@@ -3239,6 +3448,59 @@ function renderBreadcrumb() {
   }
 }
 
+function openMoveToBoard(parentCard) {
+  // Show a small picker of children to move to board
+  const proj = activeProject(); if(!proj) return;
+  const children = parentCard.children || [];
+  if(children.length === 0) { showToast('No beats to move'); return; }
+
+  // Build a simple modal-like prompt
+  const existing = document.getElementById('move-to-board-picker');
+  if(existing) existing.remove();
+
+  const picker = document.createElement('div');
+  picker.id = 'move-to-board-picker';
+  picker.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:20px;z-index:1000;min-width:320px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,0.4);';
+  picker.innerHTML = `<div style="font-family:'Courier New',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:12px;">Move which beat to the board?</div>`;
+
+  children.forEach(child => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'display:block;width:100%;text-align:left;padding:9px 12px;background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--card-font);font-size:0.82rem;cursor:pointer;border-radius:2px;margin-bottom:6px;transition:all 0.12s;';
+    btn.textContent = child.title || '(untitled)';
+    btn.onmouseover = () => { btn.style.borderColor='var(--accent)'; btn.style.color='var(--accent)'; };
+    btn.onmouseout = () => { btn.style.borderColor='var(--border)'; btn.style.color='var(--text)'; };
+    btn.onclick = () => { picker.remove(); moveCardToBoard(parentCard, child.id); };
+    picker.appendChild(btn);
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn ghost';
+  cancelBtn.style.cssText = 'width:100%;margin-top:6px;font-size:0.72rem;';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => picker.remove();
+  picker.appendChild(cancelBtn);
+  document.body.appendChild(picker);
+}
+
+function moveCardToBoard(parentCard, childId) {
+  const proj = activeProject(); if(!proj) return;
+  pushUndo();
+  const childIdx = (parentCard.children||[]).findIndex(c=>c.id===childId);
+  if(childIdx === -1) return;
+  const [moved] = parentCard.children.splice(childIdx, 1);
+  // Give it its own chapterTitle (its beat title becomes its chapter title)
+  moved.chapterTitle = moved.title;
+  moved.chapter = buildChapter(splitActChapter(parentCard.chapter||'').act, moved.title);
+  // Insert right after parent on the board
+  const parentIdx = proj.cards.findIndex(c=>c.id===parentCard.id);
+  proj.cards.splice(parentIdx+1, 0, moved);
+  proj.cards.forEach((c,i)=>c.order=i);
+  saveState();
+  showToast(`"${moved.title}" moved to board as its own chapter`);
+  closeMoveModal();
+  drillUp(0);
+}
+
 /* =======================================
    ACT & CHAPTER HELPERS
 ======================================= */
@@ -3412,7 +3674,14 @@ function exportTxt() {
   dlBlob(text,'text/plain;charset=utf-8', proj.name.replace(/\s+/g,'_')+'_outline.txt');
 }
 
-function exportHtml() {
+function openExportModal() {
+  document.getElementById('export-doc-overlay').classList.add('open');
+}
+function closeExportModal() {
+  document.getElementById('export-doc-overlay').classList.remove('open');
+}
+function exportHtml(colorMode) {
+  colorMode = colorMode || 'color';
   const proj=activeProject(); if(!proj) return;
   const CARD_BG={teal:'#b2e8e8',pink:'#f5b8df',green:'#b8ecc4',orange:'#f8d8a8',purple:'#d8c8f8',red:'#f5c0c0',yellow:'#f5ee98',blue:'#b8d4f8',salmon:'#ecc8b8',white:'#f4f4f6'};
   const labels = getFlagLabels();
@@ -3422,7 +3691,7 @@ function exportHtml() {
   const sorted = [...proj.cards].sort((a,b) => {
     const aCat=isCategorized(a),bCat=isCategorized(b);
     if(aCat!==bCat) return aCat?-1:1;
-    return a.order - b.order; // board order is the truth
+    return a.order - b.order;
   });
   sorted.forEach(c=>{ allCards.push({...c,isChild:false}); (c.children||[]).forEach(ch=>allCards.push({...ch,isChild:true})); });
 
@@ -3435,14 +3704,22 @@ function exportHtml() {
     chapterGroups.find(g=>g.ch===ch).cards.push(c);
   });
 
+  const bw = colorMode === 'bw';
+  const cardStyle = bw
+    ? '.card{border:1px solid #ddd;border-radius:4px;padding:12px 14px;margin-bottom:10px;margin-left:0;background:#fff;}'
+    : '.card{border-radius:4px;padding:12px 14px;margin-bottom:10px;margin-left:0;}';
+  const childStyle = bw
+    ? '.card.child{margin-left:24px;border-left:3px solid #bbb;}'
+    : '.card.child{margin-left:24px;border-left:3px solid rgba(0,0,0,0.1);}';
+
   let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${proj.name}</title>
 <style>
 body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 32px;color:#111;}
 h1{font-size:2rem;margin-bottom:6px;font-family:Georgia,serif;}
 .logline{color:#666;font-style:italic;margin-bottom:32px;font-size:0.95rem;}
 h2{font-size:1rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.08em;color:#555;border-bottom:2px solid #ddd;padding-bottom:5px;margin:32px 0 14px;}
-.card{border-radius:4px;padding:12px 14px;margin-bottom:10px;margin-left:0;}
-.card.child{margin-left:24px;border-left:3px solid rgba(0,0,0,0.1);}
+${cardStyle}
+${childStyle}
 .card-title{font-weight:bold;font-size:0.9rem;margin-bottom:5px;color:rgba(0,0,0,0.85);}
 .card-body{font-size:0.85rem;color:rgba(0,0,0,0.75);line-height:1.55;}
 .card-chars{font-size:0.72rem;color:rgba(0,0,0,0.5);margin-top:6px;}
@@ -3461,11 +3738,11 @@ h2{font-size:1rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.08e
     const heading = act ? act+' › '+chLabel : chLabel;
     html+=`<h2>${heading}</h2>`;
     cards.forEach(c=>{
-      const bg=CARD_BG[c.color]||'#f0f0f0';
+      const bgStyle = bw ? '' : ` style="background:${CARD_BG[c.color]||'#f0f0f0'}"`;
       const charNames=(c.characters||[]).map(id=>{const ch2=(proj.characters||[]).find(x=>x.id===id);return ch2?ch2.name:null;}).filter(Boolean);
       const cardFlags=(c.flags&&c.flags.length)?c.flags:(c.flag&&c.flag!=='none'?[c.flag]:[]);
       const flagLabelsStr=cardFlags.map(f=>labels[f]||f).join(', ');
-      html+=`<div class="card${c.isChild?' child':''}" style="background:${bg}">`;
+      html+=`<div class="card${c.isChild?' child':''}"${bgStyle}>`;
       html+=`<div class="card-title">${c.title||'(untitled)'}</div>`;
       if(c.body) html+=`<div class="card-body">${c.body}</div>`;
       if(charNames.length) html+=`<div class="card-chars">Characters: ${charNames.join(', ')}</div>`;
@@ -3475,7 +3752,9 @@ h2{font-size:1rem;font-weight:bold;text-transform:uppercase;letter-spacing:0.08e
   });
 
   html+=`<div class="footer">Exported from StoryDeck — ${new Date().toLocaleDateString()}</div></body></html>`;
-  dlBlob(html,'text/html;charset=utf-8', proj.name.replace(/\s+/g,'_')+'_outline.html');
+  const suffix = bw ? '_outline_bw.html' : '_outline.html';
+  dlBlob(html,'text/html;charset=utf-8', proj.name.replace(/\s+/g,'_')+suffix);
+  closeExportModal();
   showToast('Exported — open .html file in Word or Google Docs');
 }
 
@@ -3549,31 +3828,53 @@ function updateAutosaveUI(status) {
   }
 }
 
-async function setupAutosave() {
-  // Check if File System Access API is available
-  if (!window.showSaveFilePicker) {
-    showToast('Autosave requires Chrome or Brave — open this file in one of those browsers');
-    return;
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function initAutosaveUI() {
+  if (isIOS()) {
+    // On iPad/iOS: File System Access API doesn't exist.
+    // Data is safe in localStorage — show that clearly and offer manual backup download.
+    const setupBtn = document.getElementById('autosave-setup-btn');
+    const dot = document.getElementById('autosave-dot');
+    const label = document.getElementById('autosave-label');
+    const interval = document.getElementById('autosave-interval');
+    if (setupBtn) { setupBtn.textContent = 'Download backup'; setupBtn.onclick = saveManual; }
+    if (dot) dot.style.background = '#40c060';
+    if (label) label.textContent = 'Auto-saved to browser';
+    if (interval) interval.style.display = 'none';
   }
-  // Brave/Chrome may block this if not triggered by user gesture — this click IS a user gesture so it should work
-  try {
-    const d = new Date();
-    const projName = activeProject() ? activeProject().name.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') : 'storyboard';
-    const suggested = projName + '_' + d.toISOString().slice(0,10) + '.json';
-    fileHandle = await window.showSaveFilePicker({
-      suggestedName: suggested,
-      types: [{ description: 'StoryDeck Save File', accept: {'application/json': ['.json']} }]
-    });
-    // Start autosave timer
-    startAutosaveTimer();
-    // Save immediately
-    await writeToFile();
-    showToast('Autosave set up - saving every ' + autosaveMinutes + ' min');
-  } catch(err) {
-    if (err.name !== 'AbortError') {
-      showToast('Could not set up autosave: ' + err.message);
+}
+
+async function setupAutosave() {
+  // On iPad/iOS the File System Access API doesn't exist — no toast needed,
+  // initAutosaveUI() already replaced this button with "Download backup".
+  if (isIOS()) { saveManual(); return; }
+
+  // Try File System Access API first (Chrome/Brave desktop, gives silent overwrite).
+  // If unavailable, fall back to timed downloads (works everywhere).
+  if (typeof window.showSaveFilePicker === 'function') {
+    try {
+      const d = new Date();
+      const projName = activeProject() ? activeProject().name.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'') : 'storyboard';
+      const suggested = projName + '_' + d.toISOString().slice(0,10) + '.json';
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{ description: 'StoryDeck Save File', accept: {'application/json': ['.json']} }]
+      });
+      startAutosaveTimer();
+      await writeToFile();
+      showToast('Autosave set up — saving every ' + autosaveMinutes + ' min');
+      return;
+    } catch(err) {
+      if (err.name === 'AbortError') return; // user cancelled picker
+      // Fall through to download-based autosave
     }
   }
+  // Download-based autosave fallback — works in all browsers
+  startDownloadAutosave();
 }
 
 async function writeToFile() {
@@ -3604,11 +3905,50 @@ function startAutosaveTimer() {
   }, autosaveMinutes * 60 * 1000);
 }
 
+let downloadAutosaveActive = false;
+function startDownloadAutosave() {
+  downloadAutosaveActive = true;
+  if (autosaveTimer) clearInterval(autosaveTimer);
+  // Fire immediately, then on interval
+  triggerDownloadSave();
+  autosaveTimer = setInterval(() => {
+    if (unsavedChanges) triggerDownloadSave();
+  }, autosaveMinutes * 60 * 1000);
+  const label = document.getElementById('autosave-label');
+  const dot = document.getElementById('autosave-dot');
+  const btn = document.getElementById('autosave-setup-btn');
+  if (dot) dot.style.background = '#40c060';
+  if (label) label.textContent = 'Auto-backup every ' + autosaveMinutes + ' min';
+  if (btn) { btn.textContent = 'Stop'; btn.onclick = stopDownloadAutosave; }
+  showToast('Auto-backup on — a file will download every ' + autosaveMinutes + ' min');
+}
+
+function stopDownloadAutosave() {
+  downloadAutosaveActive = false;
+  if (autosaveTimer) { clearInterval(autosaveTimer); autosaveTimer = null; }
+  const label = document.getElementById('autosave-label');
+  const dot = document.getElementById('autosave-dot');
+  const btn = document.getElementById('autosave-setup-btn');
+  if (dot) dot.style.background = 'var(--border)';
+  if (label) label.textContent = 'Auto-backup off';
+  if (btn) { btn.textContent = 'Set autosave'; btn.onclick = setupAutosave; }
+  showToast('Auto-backup stopped');
+}
+
+function triggerDownloadSave() {
+  saveAllProjects();
+  unsavedChanges = false;
+  lastSaveTime = Date.now();
+  updateAutosaveUI('saved');
+}
+
 function changeAutosaveInterval() {
   autosaveMinutes = parseInt(document.getElementById('autosave-interval').value);
   if (fileHandle) {
     startAutosaveTimer();
     showToast('Autosave interval set to ' + autosaveMinutes + ' min');
+  } else if (downloadAutosaveActive) {
+    startDownloadAutosave();
   }
 }
 
@@ -3914,6 +4254,15 @@ function abbrevChapter(chapter) {
       });
     }
     migrateCards(p.cards||[]);
+    // Repair: sync stale chapter/chapterTitle on children to match their parent.
+    (p.cards||[]).forEach(parent => {
+      (parent.children||[]).forEach(child => {
+        if(child.chapter !== parent.chapter) child.chapter = parent.chapter;
+        const ptitle = parent.chapterTitle||parent.title;
+        if(child.chapterTitle !== ptitle) child.chapterTitle = ptitle;
+      });
+    });
+    saveState();
   });
 })();
 
@@ -3925,6 +4274,7 @@ if(state.activeId && state.openProjects[state.activeId] === undefined) {
 
 renderSidebar();
 renderProjectView();
+initAutosaveUI();
 function ipadOpen(){document.querySelector('.sidebar').classList.add('ipad-open');document.getElementById('ipad-dim').classList.add('on');}
 function ipadClose(){document.querySelector('.sidebar').classList.remove('ipad-open');document.getElementById('ipad-dim').classList.remove('on');}
 document.addEventListener('click',function(e){
@@ -4123,6 +4473,41 @@ function applyRelabelAct() {
   showToast('Act updated for all cards in group');
   closeRelabelActModal();
 }
+
+// Assign act to a card that was dropped from Ideas/uncategorized onto the board
+let assignActCardId = null;
+function openAssignActModal(cardId, suggestedAct) {
+  assignActCardId = cardId;
+  const proj = activeProject(); if(!proj) return;
+  const card = findCardAnywhere(proj.cards, cardId); if(!card) return;
+  document.getElementById('assign-act-card-title').textContent = card.title || '(untitled)';
+  document.getElementById('assign-act-suggested').textContent = suggestedAct || 'none';
+  const sel = document.getElementById('assign-act-select');
+  for(let i=0; i<sel.options.length; i++){
+    if(sel.options[i].value === suggestedAct){ sel.selectedIndex=i; break; }
+  }
+  document.getElementById('assign-act-overlay').classList.add('open');
+}
+function closeAssignActModal() {
+  document.getElementById('assign-act-overlay').classList.remove('open');
+  assignActCardId = null;
+}
+function applyAssignAct() {
+  const proj = activeProject(); if(!proj) return;
+  const newAct = document.getElementById('assign-act-select').value;
+  const card = findCardAnywhere(proj.cards, assignActCardId); if(!card) return;
+  const {chapter} = splitActChapter(card.chapter||'');
+  card.chapter = buildChapter(newAct, chapter);
+  (card.children||[]).forEach(ch => { const {chapter:c2} = splitActChapter(ch.chapter||''); ch.chapter = buildChapter(newAct, c2); });
+  saveState(); renderBoard();
+  showToast('"' + card.title + '" assigned to ' + (newAct||'no act'));
+  closeAssignActModal();
+}
+function skipAssignAct() {
+  // Leave the card where it is but without an act — user can edit later
+  closeAssignActModal();
+  showToast('Card moved. Edit it to assign an Act when ready.');
+}
 </script>
 
 <!-- RELABEL ACT MODAL -->
@@ -4146,6 +4531,52 @@ function applyRelabelAct() {
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeRelabelActModal()">Skip</button>
       <button class="btn" onclick="applyRelabelAct()">Update All Cards</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT DOC MODAL -->
+<div class="overlay" id="export-doc-overlay">
+  <div class="modal" style="width:360px;max-width:96vw;gap:16px;">
+    <h2>Export Formatted Doc</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">Choose a format. The .html file opens in Word or Google Docs.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn" onclick="exportHtml('color')" style="display:flex;align-items:center;gap:10px;padding:14px 18px;text-align:left;font-size:0.8rem;">
+        <span style="font-size:1.3rem">🎨</span>
+        <span><strong>Color</strong><br><span style="font-weight:normal;font-size:0.68rem;opacity:0.8">Card highlights match your deck colors</span></span>
+      </button>
+      <button class="btn ghost" onclick="exportHtml('bw')" style="display:flex;align-items:center;gap:10px;padding:14px 18px;text-align:left;font-size:0.8rem;">
+        <span style="font-size:1.3rem">⬜</span>
+        <span><strong>Black &amp; White</strong><br><span style="font-weight:normal;font-size:0.68rem;opacity:0.8">Clean white cards, no highlighting</span></span>
+      </button>
+    </div>
+    <div class="modal-actions" style="margin-top:4px;">
+      <button class="btn ghost" onclick="closeExportModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN ACT MODAL -->
+<div class="overlay" id="assign-act-overlay">
+  <div class="modal" style="width:380px;max-width:96vw;gap:14px;">
+    <h2>This card has no Act</h2>
+    <p style="font-family:'Courier New',monospace;font-size:0.68rem;color:var(--muted);line-height:1.6;">
+      <strong id="assign-act-card-title" style="color:var(--accent)"></strong> was dropped next to an <strong id="assign-act-suggested" style="color:var(--accent)"></strong> card. Assign an Act so it appears correctly in all views?
+    </p>
+    <div class="field">
+      <label>Assign Act</label>
+      <select id="assign-act-select">
+        <option value="">— No Act (keep in Ideas) —</option>
+        <option value="Act 1">Act 1</option>
+        <option value="Act 2">Act 2</option>
+        <option value="Act 3">Act 3</option>
+        <option value="Prologue">Prologue</option>
+        <option value="Epilogue">Epilogue</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="skipAssignAct()">Skip for now</button>
+      <button class="btn" onclick="applyAssignAct()">Assign Act</button>
     </div>
   </div>
 </div>
